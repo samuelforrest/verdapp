@@ -1,65 +1,294 @@
-import Image from "next/image";
-import TeachableMachineClient from "@/components/TeachableMachineClient"; // Import the new component
+"use client";
 
-export default function Home() {
-  return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-12 md:p-24 bg-lime-50 dark:bg-green-900 text-green-800 dark:text-lime-100">
-      {/* Header Section */}
-      <div className="z-10 w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between font-mono text-sm">
-        <p className="w-full sm:w-auto flex justify-center sm:justify-start border-b border-green-300 bg-gradient-to-b from-lime-200 pb-4 pt-6 backdrop-blur-2xl dark:border-green-700 dark:bg-green-800/60 dark:from-inherit lg:rounded-xl lg:border lg:bg-lime-100 lg:p-4 lg:dark:bg-green-800/60 text-center sm:text-left mb-4 sm:mb-0">
-          Trash Sorting App
-        </p>
-        <div className="flex h-auto items-end justify-center lg:static lg:size-auto lg:bg-none opacity-75 hover:opacity-100 transition-opacity">
-          <a
-            className="flex place-items-center gap-2 p-4 lg:p-0"
-            href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
-            target="_blank"
-            rel="noopener noreferrer"
+import { useState } from "react";
+import axios from "axios";
+
+export default function CarbonFootprintQuiz() {
+  // Define sections & their questions
+  const sections = [
+    {
+      label: "Travel",
+      questions: [
+        {
+          id: 1,
+          question: "How many miles do you drive per week?",
+          type: "number",
+          placeholder: "e.g. 100",
+        },
+        {
+          id: 2,
+          question: "How often do you fly per year?",
+          type: "number",
+          placeholder: "e.g. 2",
+        },
+      ],
+    },
+    {
+      label: "Food",
+      questions: [
+        {
+          id: 3,
+          question: "Do you eat mostly plant-based or meat-based diet?",
+          type: "select",
+          options: ["Plant-based", "Mixed", "Meat-based"],
+        },
+      ],
+    },
+    {
+      label: "Home",
+      questions: [
+        {
+          id: 4,
+          question: "How many energy-efficient appliances do you have?",
+          type: "number",
+          placeholder: "e.g. 5",
+        },
+      ],
+    },
+    {
+      label: "Purchases",
+      questions: [
+        {
+          id: 5,
+          question: "How many items do you buy new per month?",
+          type: "number",
+          placeholder: "e.g. 3",
+        },
+      ],
+    },
+  ];
+
+  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+  const [answers, setAnswers] = useState({});
+  const [loading, setLoading] = useState(false);
+  const [result, setResult] = useState(null);
+
+  const currentSection = sections[currentSectionIndex];
+
+  // Handle input change
+  const handleChange = (id, value) => {
+    setAnswers((prev) => ({ ...prev, [id]: value }));
+  };
+
+  // Check if current section's questions are all answered
+  const isCurrentSectionComplete = currentSection.questions.every(
+    (q) => answers[q.id] !== undefined && answers[q.id] !== ""
+  );
+
+  // Move to next section
+  const goToNextSection = () => {
+    if (currentSectionIndex < sections.length - 1 && isCurrentSectionComplete) {
+      setCurrentSectionIndex((prev) => prev + 1);
+    }
+  };
+
+  // Move to previous section
+  const goToPreviousSection = () => {
+    if (currentSectionIndex > 0) {
+      setCurrentSectionIndex((prev) => prev - 1);
+    }
+  };
+
+  // Submit form data
+  const handleSubmit = async () => {
+    setLoading(true);
+    try {
+      const { data } = await axios.post("/api/carbon-footprint", { answers });
+      setResult(data);
+    } catch (error) {
+      setResult({ error: "Failed to fetch AI results. Try again later." });
+    } finally {
+      setLoading(false);
+    }
+  };
+
+  if (result) {
+    return (
+      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 font-inter">
+        <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 text-center border border-green-200 animate-fadeIn">
+          <h1 className="text-4xl font-extrabold mb-8 text-green-800 drop-shadow-lg">
+            Your Carbon Footprint Insight
+          </h1>
+          {result.error ? (
+            <p className="text-red-600 text-lg mb-8">{result.error}</p>
+          ) : (
+            <p className="text-green-900 text-xl whitespace-pre-line mb-8">
+              {result.message}
+            </p>
+          )}
+          <button
+            onClick={() => {
+              setResult(null);
+              setAnswers({});
+              setCurrentSectionIndex(0);
+            }}
+            className="inline-block px-10 py-3 bg-gradient-to-r from-green-600 to-lime-500 text-white font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-lime-600 transition transform hover:scale-105 active:scale-95"
           >
-            By{" "}
-            <Image
-              src="/vercel.svg"
-              alt="Vercel Logo"
-              className="dark:invert"
-              width={80}
-              height={20}
-              priority
-            />
-          </a>
+            Restart
+          </button>
         </div>
-      </div>
+      </main>
+    );
+  }
 
-      {/* Camera Feed Section - Replaced with TeachableMachineClient */}
-      <div className="w-full max-w-2xl flex flex-col items-center">
-        <TeachableMachineClient />
-      </div>
-
-      {/* Information Cards Section - This will be at the bottom */}
-      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
-        <div className="group rounded-xl border border-green-300 dark:border-green-700 bg-white dark:bg-green-800/50 p-6 shadow-md transition-all hover:shadow-lg hover:border-green-400 dark:hover:border-green-500">
-          <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-lime-200">
-            Trash Type{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
+  return (
+    <main className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 flex flex-col items-center font-inter">
+      <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 border border-green-200 animate-fadeIn">
+        {/* Section Indicator */}
+        <div className="mb-8 text-center">
+          <p className="text-green-700 font-semibold tracking-wide">
+            Section {currentSectionIndex + 1} of {sections.length} —{" "}
+            <span className="text-green-900 text-xl font-bold">
+              {currentSection.label}
             </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-75 text-green-600 dark:text-lime-300 mx-auto md:mx-0">
-            [Model Output: Recycle/Compost/Trash]
           </p>
+          <div className="flex justify-center mt-2 gap-3">
+            {sections.map((section, idx) => (
+              <div
+                key={section.label}
+                className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
+                  idx === currentSectionIndex
+                    ? "bg-green-600 border-green-600"
+                    : "border-green-300"
+                } flex items-center justify-center text-white font-bold select-none transition`}
+                onClick={() => setCurrentSectionIndex(idx)}
+                title={section.label}
+              >
+                {idx + 1}
+              </div>
+            ))}
+          </div>
         </div>
 
-        <div className="group rounded-xl border border-green-300 dark:border-green-700 bg-white dark:bg-green-800/50 p-6 shadow-md transition-all hover:shadow-lg hover:border-green-400 dark:hover:border-green-500">
-          <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-lime-200">
-            Designated Bin{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-75 text-green-600 dark:text-lime-300 mx-auto md:mx-0">
-            [Corresponding Bin Image/Color]
-          </p>
-        </div>
+        {/* Form */}
+        <form
+          onSubmit={(e) => {
+            e.preventDefault();
+            if (currentSectionIndex === sections.length - 1) {
+              handleSubmit();
+            } else {
+              goToNextSection();
+            }
+          }}
+          className="space-y-8"
+        >
+          {currentSection.questions.map((q) => (
+            <div key={q.id} className="flex flex-col">
+              <label
+                htmlFor={`q-${q.id}`}
+                className="mb-3 text-xl font-semibold text-green-800"
+              >
+                {q.question}
+              </label>
+              {q.type === "select" ? (
+                <select
+                  id={`q-${q.id}`}
+                  value={answers[q.id] || ""}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
+                >
+                  <option value="" disabled>
+                    Select an option
+                  </option>
+                  {q.options.map((opt) => (
+                    <option key={opt} value={opt}>
+                      {opt}
+                    </option>
+                  ))}
+                </select>
+              ) : (
+                <input
+                  id={`q-${q.id}`}
+                  type={q.type}
+                  value={answers[q.id] || ""}
+                  onChange={(e) => handleChange(q.id, e.target.value)}
+                  placeholder={q.placeholder}
+                  min={0}
+                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
+                />
+              )}
+            </div>
+          ))}
+
+          {/* Navigation Buttons */}
+          <div className="flex justify-between mt-6">
+            <button
+              type="button"
+              onClick={goToPreviousSection}
+              disabled={currentSectionIndex === 0}
+              className={`px-6 py-3 rounded-md font-semibold border ${
+                currentSectionIndex === 0
+                  ? "border-green-200 text-green-400 cursor-not-allowed"
+                  : "border-green-600 text-green-700 hover:bg-green-100"
+              } transition`}
+            >
+              Previous
+            </button>
+
+            <button
+              type="submit"
+              disabled={!isCurrentSectionComplete || loading}
+              className={`px-6 py-3 rounded-md font-semibold text-white ${
+                isCurrentSectionComplete && !loading
+                  ? "bg-green-600 hover:bg-green-700"
+                  : "bg-green-300 cursor-not-allowed"
+              } transition flex items-center gap-2`}
+            >
+              {loading && (
+                <svg
+                  className="animate-spin h-5 w-5 text-white"
+                  xmlns="http://www.w3.org/2000/svg"
+                  fill="none"
+                  viewBox="0 0 24 24"
+                >
+                  <circle
+                    className="opacity-25"
+                    cx="12"
+                    cy="12"
+                    r="10"
+                    stroke="currentColor"
+                    strokeWidth="4"
+                  />
+                  <path
+                    className="opacity-75"
+                    fill="currentColor"
+                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
+                  />
+                </svg>
+              )}
+              {currentSectionIndex === sections.length - 1 ? "Submit" : "Next"}
+            </button>
+          </div>
+        </form>
       </div>
+
+      <footer className="mt-10 text-center text-green-700 opacity-70 text-sm select-none">
+        &copy; {new Date().getFullYear()} Carbon Quiz. Made with{" "}
+        <span className="text-green-500">♥</span>
+      </footer>
+
+      <style jsx global>{`
+        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
+
+        body {
+          font-family: "Inter", sans-serif;
+        }
+
+        /* FadeIn animation */
+        @keyframes fadeIn {
+          0% {
+            opacity: 0;
+            transform: translateY(15px);
+          }
+          100% {
+            opacity: 1;
+            transform: translateY(0);
+          }
+        }
+        .animate-fadeIn {
+          animation: fadeIn 0.5s ease forwards;
+        }
+      `}</style>
     </main>
   );
 }

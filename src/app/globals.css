@@ -1,45 +1,172 @@
-@import "tailwindcss/preflight"; /* Replaces @tailwind base */
-@import "tailwindcss/utilities"; /* Replaces @tailwind components and @tailwind utilities */
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  /* Climate-ish palette */
-  --forest-green: 34, 139, 34;
-  --earth-brown: 139, 69, 19;
-  --sky-blue: 135, 206, 235;
-  --leaf-green: 173, 255, 47;
-  --sand-beige: 245, 245, 220;
+
+/* Import Inter font */
+@import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
+
+/* --- Reset and Base Styles --- */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 10, 40, 10; /* Darker green for dark mode */
-    --background-end-rgb: 0, 20, 0; /* Even darker green */
+html, body {
+  margin: 0;
+  padding: 0;
+  font-family: "Inter", sans-serif;
+  background: linear-gradient(135deg, #f0fdf4, #f7fee7, #d9f99d);
+  color: #22543d; /* dark green */
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  min-height: 100vh;
+  scroll-behavior: smooth;
+}
 
-    /* Dark mode climate-ish palette */
-    --forest-green: 144, 238, 144; /* Lighter green for text */
-    --earth-brown: 210, 180, 140; /* Lighter brown for text */
-    --sky-blue: 173, 216, 230; /* Lighter blue */
-    --leaf-green: 173, 255, 47; /* Keep vibrant */
-    --sand-beige: 200, 200, 180; /* Darker beige */
+main {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: 3rem 1.5rem;
+  min-height: 100vh;
+}
+
+/* --- Container Card --- */
+.container {
+  max-width: 480px;
+  width: 100%;
+  background: white;
+  border-radius: 2rem;
+  box-shadow: 0 10px 30px rgba(34, 84, 61, 0.1);
+  border: 1.5px solid #c6f6d5; /* light green border */
+  padding: 3rem;
+  animation: fadeIn 0.5s ease forwards;
+  text-align: center;
+}
+
+/* --- Headings --- */
+h1, h2 {
+  font-weight: 800;
+  margin-bottom: 1.5rem;
+  color: #276749; /* green-700 */
+  text-shadow: 0 2px 6px rgba(34, 84, 61, 0.2);
+}
+
+h1 {
+  font-size: 2.75rem;
+}
+
+h2 {
+  font-size: 2rem;
+  letter-spacing: -0.03em;
+}
+
+/* --- Form Elements --- */
+form {
+  display: flex;
+  flex-direction: column;
+  gap: 2.5rem;
+}
+
+label {
+  display: block;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #276749;
+  margin-bottom: 0.75rem;
+}
+
+input[type="number"],
+select {
+  padding: 1.25rem 1.5rem;
+  font-size: 1.125rem;
+  border: 2px solid #9ae6b4; /* green-300 */
+  border-radius: 1rem;
+  background-color: white;
+  color: #22543d;
+  box-shadow: 0 1px 3px rgba(34, 84, 61, 0.1);
+  transition: border-color 0.3s ease, box-shadow 0.3s ease;
+  width: 100%;
+  font-weight: 500;
+}
+
+input[type="number"]::placeholder {
+  color: #a0aec0; /* gray */
+  font-weight: 400;
+}
+
+input[type="number"]:focus,
+select:focus {
+  outline: none;
+  border-color: #38a169; /* green-500 */
+  box-shadow: 0 0 8px 3px rgba(56, 161, 105, 0.4);
+}
+
+/* --- Button Styles --- */
+button {
+  cursor: pointer;
+  border: none;
+  font-size: 1.25rem;
+  font-weight: 700;
+  padding: 1.25rem 0;
+  border-radius: 9999px; /* full rounded */
+  box-shadow: 0 8px 15px rgba(72, 187, 120, 0.3);
+  color: white;
+  background: linear-gradient(90deg, #2f855a, #a3e635);
+  transition: background 0.3s ease, transform 0.15s ease, box-shadow 0.3s ease;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+button:hover:not(:disabled) {
+  background: linear-gradient(90deg, #276749, #84cc16);
+  transform: scale(1.05);
+  box-shadow: 0 10px 20px rgba(38, 103, 73, 0.4);
+}
+
+button:active:not(:disabled) {
+  transform: scale(0.95);
+}
+
+button:disabled {
+  background-color: #a3a3a3;
+  cursor: not-allowed;
+  box-shadow: none;
+  color: #eee;
+}
+
+/* --- Result Text --- */
+.result-message {
+  white-space: pre-line;
+  font-size: 1.125rem;
+  color: #22543d;
+  margin-bottom: 2rem;
+}
+
+/* --- Footer --- */
+footer {
+  margin-top: 2.5rem;
+  font-size: 0.875rem;
+  color: #4a5568;
+  opacity: 0.7;
+  user-select: none;
+}
+
+/* --- Animations --- */
+@keyframes fadeIn {
+  0% {
+    opacity: 0;
+    transform: translateY(15px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0);
   }
 }
 
-body {
-  color: rgb(var(--forest-green));
-  background: linear-gradient(
-      to bottom,
-      transparent,
-      rgb(var(--background-end-rgb))
-    )
-    rgb(var(--background-start-rgb));
-}
-
-@layer utilities {
-  .text-balance {
-    text-wrap: balance;
-  }
+/* Utility Classes */
+.text-center {
+  text-align: center;
 }
