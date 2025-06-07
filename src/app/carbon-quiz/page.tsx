@@ -1,295 +1,283 @@
 "use client";
 
-import { useState } from "react";
-import axios from "axios";
+import React, { useState } from "react";
 import "./carbon-quiz.css";
 
-export default function CarbonFootprintQuiz() {
-  // Define sections & their questions
-  const sections = [
-    {
-      label: "Travel",
-      questions: [
-        {
-          id: 1,
-          question: "How many miles do you drive per week?",
-          type: "number",
-          placeholder: "e.g. 100",
-        },
-        {
-          id: 2,
-          question: "How often do you fly per year?",
-          type: "number",
-          placeholder: "e.g. 2",
-        },
-      ],
-    },
-    {
-      label: "Food",
-      questions: [
-        {
-          id: 3,
-          question: "Do you eat mostly plant-based or meat-based diet?",
-          type: "select",
-          options: ["Plant-based", "Mixed", "Meat-based"],
-        },
-      ],
-    },
-    {
-      label: "Home",
-      questions: [
-        {
-          id: 4,
-          question: "How many energy-efficient appliances do you have?",
-          type: "number",
-          placeholder: "e.g. 5",
-        },
-      ],
-    },
-    {
-      label: "Purchases",
-      questions: [
-        {
-          id: 5,
-          question: "How many items do you buy new per month?",
-          type: "number",
-          placeholder: "e.g. 3",
-        },
-      ],
-    },
-  ];
+const questions = [
+  {
+    section: "Travel",
+    fields: [
+      {
+        name: "car_miles",
+        label: "How long do you think you spend in a car per week (in hours)",
+        type: "number",
+        required: true,
+      },
+      {
+        name: "public_transport",
+        label: "How many miles do you travel per week by public transport?",
+        type: "number",
+        required: false,
+      },
+      {
+        name: "flights_year",
+        label: "How many flights do you take per year?",
+        type: "number",
+        required: true,
+      },
+    ],
+  },
+  {
+    section: "Home",
+    fields: [
+      {
+        name: "home_size",
+        label: "What is the size of your home (in square meters)?",
+        type: "number",
+        required: true,
+      },
+      {
+        name: "energy_type",
+        label: "What is your main energy source at home?",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "electricity_usage",
+        label: "How much electricity do you use per month (kWh)?",
+        type: "number",
+        required: false,
+      },
+    ],
+  },
+  {
+    section: "Purchases",
+    fields: [
+      {
+        name: "clothes_per_month",
+        label: "How many new clothing items do you buy per month?",
+        type: "number",
+        required: false,
+      },
+      {
+        name: "electronics_per_year",
+        label: "How many new electronic devices do you buy per year?",
+        type: "number",
+        required: false,
+      },
+      {
+        name: "recycle",
+        label: "Do you regularly recycle? (yes/no)",
+        type: "text",
+        required: true,
+      },
+    ],
+  },
+  {
+    section: "Food",
+    fields: [
+      {
+        name: "diet_type",
+        label: "What best describes your diet? (vegan, vegetarian, mixed, meat-heavy)",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "food_waste",
+        label: "How much food do you waste per week (in kg)?",
+        type: "number",
+        required: false,
+      },
+    ],
+  },
+];
 
+type FormState = {
+  [key: string]: string;
+};
+
+export default function OnboardingForm() {
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
+  const [formData, setFormData] = useState<FormState>({});
+  const [submitted, setSubmitted] = useState(false);
+  const [errors, setErrors] = useState<string[]>([]);
+  const [analysisResult, setAnalysisResult] = useState<string | null>(null);
   const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
 
-  const currentSection = sections[currentSectionIndex];
+  const section = questions[currentSectionIndex];
 
-  // Handle input change
-  const handleChange = (id, value) => {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setFormData((prev) => ({ ...prev, [name]: value }));
   };
 
-  // Check if current section's questions are all answered
-  const isCurrentSectionComplete = currentSection.questions.every(
-    (q) => answers[q.id] !== undefined && answers[q.id] !== ""
-  );
+  const validateSection = () => {
+    const requiredFields = section.fields.filter((field) => field.required);
+    const missing = requiredFields
+      .filter((field) => !formData[field.name]?.trim())
+      .map((field) => field.label);
 
-  // Move to next section
-  const goToNextSection = () => {
-    if (currentSectionIndex < sections.length - 1 && isCurrentSectionComplete) {
+    setErrors(missing);
+    return missing.length === 0;
+  };
+
+  const handleNext = () => {
+    if (validateSection()) {
       setCurrentSectionIndex((prev) => prev + 1);
+      setErrors([]);
     }
   };
 
-  // Move to previous section
-  const goToPreviousSection = () => {
-    if (currentSectionIndex > 0) {
-      setCurrentSectionIndex((prev) => prev - 1);
-    }
+  const handlePrevious = () => {
+    setCurrentSectionIndex((prev) => Math.max(prev - 1, 0));
+    setErrors([]);
   };
 
-  // Submit form data
-  const handleSubmit = async () => {
+  // Call Gemini API to analyze carbon footprint
+  async function analyzeCarbonUsage(data: FormState) {
     setLoading(true);
+    setAnalysisResult(null);
+
+    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc";
+    const prompt = `
+Estimate the total lifetime carbon footprint (in tonnes CO2 equivalent) of a person given the following lifestyle data. Provide a clear, concise explanation of your reasoning.
+
+Data:
+${JSON.stringify(data, null, 2)}
+`;
+
     try {
-      const { data } = await axios.post("/api/carbon-footprint", { answers });
-      setResult(data);
+      const response = await fetch(
+        `https://generativelanguage.googleapis.com/v1beta/models/flash-lite:generateText?key=AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc`,
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify({
+            prompt: {
+              text: prompt,
+            },
+            temperature: 0.7,
+            maxOutputTokens: 512,
+          }),
+        }
+      );
+
+      const result = await response.json();
+
+      if (result.candidates && result.candidates.length > 0) {
+        setAnalysisResult(result.candidates[0].output);
+      } else {
+        setAnalysisResult("No response from Gemini API.");
+      }
     } catch (error) {
-      setResult({ error: "Failed to fetch AI results. Try again later." });
+      setAnalysisResult("Error contacting Gemini API: " + error);
     } finally {
       setLoading(false);
     }
+  }
+
+  const handleSubmit = async () => {
+    if (validateSection()) {
+      setSubmitted(true);
+      console.log("Submitted data:", formData);
+      await analyzeCarbonUsage(formData);
+    }
   };
 
-  if (result) {
+  const handleReset = () => {
+    setFormData({});
+    setCurrentSectionIndex(0);
+    setErrors([]);
+    setSubmitted(false);
+    setAnalysisResult(null);
+  };
+
+  if (submitted) {
     return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 font-inter">
-        <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 text-center border border-green-200 animate-fadeIn">
-          <h1 className="text-4xl font-extrabold mb-8 text-green-800 drop-shadow-lg">
-            Your Carbon Footprint Insight
-          </h1>
-          {result.error ? (
-            <p className="text-red-600 text-lg mb-8">{result.error}</p>
-          ) : (
-            <p className="text-green-900 text-xl whitespace-pre-line mb-8">
-              {result.message}
-            </p>
-          )}
-          <button
-            onClick={() => {
-              setResult(null);
-              setAnswers({});
-              setCurrentSectionIndex(0);
-            }}
-            className="inline-block px-10 py-3 bg-gradient-to-r from-green-600 to-lime-500 text-white font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-lime-600 transition transform hover:scale-105 active:scale-95"
-          >
-            Restart
-          </button>
-        </div>
-      </main>
+      <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
+        <h2 className="text-xl font-bold mb-4">✅ Submission Complete</h2>
+        <pre className="bg-gray-100 p-4 rounded mb-4">
+          {JSON.stringify(formData, null, 2)}
+        </pre>
+
+        {loading && <p className="text-blue-600 mb-4">Analyzing with Gemini...</p>}
+
+        {analysisResult && (
+          <div className="bg-green-100 p-4 rounded mb-4 whitespace-pre-wrap">
+            <h3 className="font-semibold mb-2">♻️ Gemini's Carbon Footprint Estimate:</h3>
+            <p>{analysisResult}</p>
+          </div>
+        )}
+
+        <button
+          className="mt-4 px-4 py-2 bg-blue-500 text-white rounded"
+          onClick={handleReset}
+        >
+          Restart
+        </button>
+      </div>
     );
   }
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 flex flex-col items-center font-inter">
-      <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 border border-green-200 animate-fadeIn">
-        {/* Section Indicator */}
-        <div className="mb-8 text-center">
-          <p className="text-green-700 font-semibold tracking-wide">
-            Section {currentSectionIndex + 1} of {sections.length} —{" "}
-            <span className="text-green-900 text-xl font-bold">
-              {currentSection.label}
-            </span>
-          </p>
-          <div className="flex justify-center mt-2 gap-3">
-            {sections.map((section, idx) => (
-              <div
-                key={section.label}
-                className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                  idx === currentSectionIndex
-                    ? "bg-green-600 border-green-600"
-                    : "border-green-300"
-                } flex items-center justify-center text-white font-bold select-none transition`}
-                onClick={() => setCurrentSectionIndex(idx)}
-                title={section.label}
-              >
-                {idx + 1}
-              </div>
-            ))}
-          </div>
+    <div className="max-w-xl mx-auto p-6 bg-white rounded shadow">
+      <h2 className="text-2xl font-semibold mb-4">{section.section}</h2>
+
+      {section.fields.map((field) => (
+        <div key={field.name} className="mb-4">
+          <label className="block mb-1 font-medium">{field.label}</label>
+          <input
+            name={field.name}
+            type={field.type}
+            value={formData[field.name] || ""}
+            onChange={handleChange}
+            className="w-full px-3 py-2 border rounded"
+            required={field.required}
+          />
         </div>
+      ))}
 
-        {/* Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (currentSectionIndex === sections.length - 1) {
-              handleSubmit();
-            } else {
-              goToNextSection();
-            }
-          }}
-          className="space-y-8"
+      {errors.length > 0 && (
+        <div className="bg-red-100 text-red-700 p-3 rounded mb-4">
+          <strong>⚠ Please fill in the following:</strong>
+          <ul className="list-disc ml-5">
+            {errors.map((err) => (
+              <li key={err}>{err}</li>
+            ))}
+          </ul>
+        </div>
+      )}
+
+      <div className="flex justify-between mt-6">
+        <button
+          onClick={handlePrevious}
+          disabled={currentSectionIndex === 0}
+          className={`px-4 py-2 rounded ${
+            currentSectionIndex === 0 ? "bg-gray-300" : "bg-blue-500 text-white"
+          }`}
         >
-          {currentSection.questions.map((q) => (
-            <div key={q.id} className="flex flex-col">
-              <label
-                htmlFor={`q-${q.id}`}
-                className="mb-3 text-xl font-semibold text-green-800"
-              >
-                {q.question}
-              </label>
-              {q.type === "select" ? (
-                <select
-                  id={`q-${q.id}`}
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleChange(q.id, e.target.value)}
-                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
-                >
-                  <option value="" disabled>
-                    Select an option
-                  </option>
-                  {q.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  id={`q-${q.id}`}
-                  type={q.type}
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleChange(q.id, e.target.value)}
-                  placeholder={q.placeholder}
-                  min={0}
-                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
-                />
-              )}
-            </div>
-          ))}
+          Previous
+        </button>
 
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={goToPreviousSection}
-              disabled={currentSectionIndex === 0}
-              className={`px-6 py-3 rounded-md font-semibold border ${
-                currentSectionIndex === 0
-                  ? "border-green-200 text-green-400 cursor-not-allowed"
-                  : "border-green-600 text-green-700 hover:bg-green-100"
-              } transition`}
-            >
-              Previous
-            </button>
-
-            <button
-              type="submit"
-              disabled={!isCurrentSectionComplete || loading}
-              className={`px-6 py-3 rounded-md font-semibold text-white ${
-                isCurrentSectionComplete && !loading
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-green-300 cursor-not-allowed"
-              } transition flex items-center gap-2`}
-            >
-              {loading && (
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  />
-                </svg>
-              )}
-              {currentSectionIndex === sections.length - 1 ? "Submit" : "Next"}
-            </button>
-          </div>
-        </form>
+        {currentSectionIndex < questions.length - 1 ? (
+          <button
+            onClick={handleNext}
+            className="px-4 py-2 bg-blue-500 text-white rounded"
+          >
+            Next
+          </button>
+        ) : (
+          <button
+            onClick={handleSubmit}
+            className="px-4 py-2 bg-green-500 text-white rounded"
+            disabled={loading}
+          >
+            Submit
+          </button>
+        )}
       </div>
-
-      <footer className="mt-10 text-center text-green-700 opacity-70 text-sm select-none">
-        &copy; {new Date().getFullYear()} Carbon Quiz. Made with{" "}
-        <span className="text-green-500">♥</span>
-      </footer>
-
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
-
-        body {
-          font-family: "Inter", sans-serif;
-        }
-
-        /* FadeIn animation */
-        @keyframes fadeIn {
-          0% {
-            opacity: 0;
-            transform: translateY(15px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease forwards;
-        }
-      `}</style>
-    </main>
+    </div>
   );
 }
