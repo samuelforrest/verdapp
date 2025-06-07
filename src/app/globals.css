@@ -1,32 +1,19 @@
-@import "tailwindcss/preflight";
-@import "tailwindcss/utilities";
+/* Tailwind CSS directives to include base, components, and utilities styles. */
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
 
-:root {
-  --foreground-rgb: 0, 0, 0;
-  --background-start-rgb: 214, 219, 220;
-  --background-end-rgb: 255, 255, 255;
-  --forest-green: 34, 139, 34;
-  --earth-brown: 139, 69, 19;
-  --sky-blue: 135, 206, 235;
-  --leaf-green: 173, 255, 47;
-  --sand-beige: 245, 245, 220;
+/* Default body styles: sets font, background color, and text color. */
+body {
+  @apply font-sans bg-pale-leaf text-forest-green;
 }
 
-@media (prefers-color-scheme: dark) {
-  :root {
-    --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 10, 40, 10;
-    --background-end-rgb: 0, 20, 0;
-
-    --forest-green: 144, 238, 144;
-    --earth-brown: 210, 180, 140;
-    --sky-blue: 173, 216, 230;
-    --leaf-green: 173, 255, 47;
-    --sand-beige: 200, 200, 180;
-  }
-}
-
-/* Utility Classes */
-.text-center {
-  text-align: center;
+/* Default heading styles: sets font and text color for all heading levels. */
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  @apply font-serif text-pine-green;
 }

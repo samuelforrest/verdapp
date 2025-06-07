@@ -121,9 +121,16 @@ const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
     if (
       modelRef.current &&
       webcamRef.current &&
-      webcamRef.current.canvas &&
-      labelContainerRef.current
+      webcamRef.current.canvas
+      // labelContainerRef.current will be checked more robustly below
     ) {
+      const currentLabelContainer = labelContainerRef.current;
+      if (!currentLabelContainer) {
+        // If labelContainerRef.current is null here, exit early or handle
+        onPrediction({ trashType: null, confidence: null });
+        return;
+      }
+
       try {
         const predictions = await modelRef.current.predict(
           webcamRef.current.canvas
@@ -136,8 +143,12 @@ const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
           const classPredictionText =
             prediction.className + ": " + prediction.probability.toFixed(2);
 
-          if (labelContainerRef.current.childNodes[i]) {
-            (labelContainerRef.current.childNodes[i] as HTMLElement).innerHTML =
+          // Robust check for labelContainerRef and its childNodes
+          if (
+            currentLabelContainer.childNodes &&
+            currentLabelContainer.childNodes[i]
+          ) {
+            (currentLabelContainer.childNodes[i] as HTMLElement).innerHTML =
               classPredictionText;
           }
 
@@ -172,14 +183,23 @@ const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
   }, []);
 
   return (
-    <div className="flex flex-col items-center gap-4 p-4 border border-green-300 dark:border-green-600 rounded-lg bg-white/70 dark:bg-green-800/50 shadow-xl">
-      <div className="text-xl font-semibold text-green-700 dark:text-lime-200">
-        Teachable Machine Image Model
+    <div className="flex flex-col items-center gap-4 p-4 rounded-lg bg-white/70 backdrop-blur-sm border border-leaf-green/30 shadow-md w-full">
+      <div className="text-xl font-serif font-semibold text-pine-green">
+        Live Camera Feed
+      </div>
+      <div
+        ref={webcamContainerRef}
+        className="w-full max-w-xs h-auto aspect-square bg-stone-gray/20 rounded-md overflow-hidden shadow-inner flex items-center justify-center"
+      >
+        {/* Webcam canvas will be appended here */}
+        <p className="text-sm text-bark-brown p-4">
+          Click &quot;Start Camera&quot; to begin.
+        </p>
       </div>
       <button
         type="button"
         onClick={init}
-        className="flex items-center justify-center gap-2 px-6 py-3 bg-lime-500 hover:bg-lime-600 text-white dark:bg-green-500 dark:hover:bg-green-600 rounded-lg transition-colors shadow-md hover:shadow-lg text-lg font-medium"
+        className="flex items-center justify-center gap-2 px-6 py-3 bg-leaf-green hover:bg-pine-green text-white rounded-lg transition-colors shadow-md hover:shadow-lg text-lg font-medium focus:outline-none focus:ring-2 focus:ring-leaf-green focus:ring-offset-2 focus:ring-offset-pale-leaf"
       >
         <svg
           xmlns="http://www.w3.org/2000/svg"
@@ -202,20 +222,13 @@ const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
         </svg>
         Start Camera
       </button>
-      <p className="text-xs text-center text-gray-600 dark:text-gray-400 mt-2 px-4">
-        For best results, please use a clear background with a solid color
-        (e.g., black, white, or grey).
-      </p>
       <div
-        id="webcam-container"
-        ref={webcamContainerRef}
-        className="w-[200px] h-[200px] bg-gray-300 dark:bg-gray-600 rounded-md overflow-hidden shadow-inner border border-gray-400 dark:border-gray-500"
-      ></div>
-      <div
-        id="label-container"
         ref={labelContainerRef}
-        className="flex flex-col gap-1.5 mt-3 text-base text-green-700 dark:text-lime-300 w-full max-w-xs items-start"
-      ></div>
+        className="w-full text-center text-sm text-bark-brown"
+      >
+        {/* Prediction labels will be appended here */}
+        {/* Initial placeholder text can be added if desired */}
+      </div>
     </div>
   );
 };
