@@ -1815,7 +1815,7 @@ const sortedCountries = supportedCountries.sort((a, b) => {
 // Main page component for the trash sorter application.
 export default function Home() {
   // State for the currently selected country code.
-  const [selectedCountry, setSelectedCountry] = useState<string>("DE"); // Default to Germany.
+  const [selectedCountry, setSelectedCountry] = useState<string>("US"); // Default to United States.
   // State for the prediction result from Teachable Machine.
   const [predictionResult, setPredictionResult] = useState<string | null>(null);
 
