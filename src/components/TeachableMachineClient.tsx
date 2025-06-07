@@ -2,29 +2,60 @@
 
 import { useEffect, useRef } from "react";
 
-// To inform TypeScript about global objects from external scripts
+interface TMPrediction {
+  className: string;
+  probability: number;
+}
+
+interface TMImageModel {
+  predict: (canvas: HTMLCanvasElement) => Promise<TMPrediction[]>;
+  getTotalClasses: () => number;
+}
+
+interface TMWebcam {
+  setup: (options?: { facingMode?: string }) => Promise<void>;
+  play: () => Promise<void>;
+  stop: () => void;
+  update: () => void;
+  canvas: HTMLCanvasElement;
+}
+
+interface TF {
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
+  [key: string]: any;
+}
+
 declare global {
   interface Window {
-    tmImage: any; // Teachable Machine Image library
-    tf: any; // TensorFlow.js
+    tmImage: {
+      load: (modelURL: string, metadataURL: string) => Promise<TMImageModel>;
+      Webcam: new (width: number, height: number, flip: boolean) => TMWebcam;
+    };
+    tf: TF;
   }
 }
 
-// The link to your model provided by Teachable Machine export panel
 const MODEL_URL = "https://teachablemachine.withgoogle.com/models/Z49AQXORf/";
 
-const TeachableMachineClient = () => {
+interface TeachableMachineClientProps {
+  onPrediction: (prediction: {
+    trashType: string | null;
+    confidence: number | null;
+  }) => void;
+}
+
+const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
+  onPrediction,
+}) => {
   const webcamContainerRef = useRef<HTMLDivElement>(null);
   const labelContainerRef = useRef<HTMLDivElement>(null);
 
-  const modelRef = useRef<any>(null); // Stores the loaded Teachable Machine model
-  const webcamRef = useRef<any>(null); // Stores the webcam instance
-  const maxPredictionsRef = useRef<number>(0); // Stores the total number of classes
-  const animationFrameIdRef = useRef<number | null>(null); // Stores the ID of the animation frame for cleanup
+  const modelRef = useRef<TMImageModel | null>(null);
+  const webcamRef = useRef<TMWebcam | null>(null);
+  const maxPredictionsRef = useRef<number>(0);
+  const animationFrameIdRef = useRef<number | null>(null);
 
-  // Initializes the Teachable Machine model and webcam
   const init = async () => {
-    // Check if the necessary scripts are loaded
     if (!window.tmImage) {
       console.error("Teachable Machine Image script (tmImage) not loaded yet.");
       alert(
@@ -44,34 +75,30 @@ const TeachableMachineClient = () => {
     const metadataURL = MODEL_URL + "metadata.json";
 
     try {
-      // Load the model and metadata
       modelRef.current = await window.tmImage.load(modelURL, metadataURL);
       maxPredictionsRef.current = modelRef.current.getTotalClasses();
 
-      // Setup webcam
-      const flip = true; // Whether to flip the webcam
-      webcamRef.current = new window.tmImage.Webcam(200, 200, flip); // width, height, flip
-      await webcamRef.current.setup(); // Request access to the webcam
+      const flip = true;
+      webcamRef.current = new window.tmImage.Webcam(200, 200, flip);
+      await webcamRef.current.setup({ facingMode: "environment" });
       await webcamRef.current.play();
 
-      // Cancel any existing animation frame to prevent multiple loops
       if (animationFrameIdRef.current) {
         window.cancelAnimationFrame(animationFrameIdRef.current);
       }
-      // Start the prediction loop
       animationFrameIdRef.current = window.requestAnimationFrame(loop);
 
-      // Append webcam canvas to the DOM
       if (webcamContainerRef.current) {
-        webcamContainerRef.current.innerHTML = ""; // Clear previous canvas
+        webcamContainerRef.current.innerHTML = "";
         webcamContainerRef.current.appendChild(webcamRef.current.canvas);
       }
 
-      // Create label containers for predictions
       if (labelContainerRef.current) {
-        labelContainerRef.current.innerHTML = ""; // Clear previous labels
+        labelContainerRef.current.innerHTML = "";
         for (let i = 0; i < maxPredictionsRef.current; i++) {
-          labelContainerRef.current.appendChild(document.createElement("div"));
+          const div = document.createElement("div");
+          div.className = "text-sm";
+          labelContainerRef.current.appendChild(div);
         }
       }
     } catch (error) {
@@ -82,16 +109,14 @@ const TeachableMachineClient = () => {
     }
   };
 
-  // Prediction loop: updates webcam frame, predicts, and requests next frame
   const loop = async () => {
     if (webcamRef.current) {
-      webcamRef.current.update(); // Update the webcam frame
+      webcamRef.current.update();
       await predict();
       animationFrameIdRef.current = window.requestAnimationFrame(loop);
     }
   };
 
-  // Runs the webcam image through the image model and updates labels
   const predict = async () => {
     if (
       modelRef.current &&
@@ -100,32 +125,41 @@ const TeachableMachineClient = () => {
       labelContainerRef.current
     ) {
       try {
-        // Predict can take in an image, video or canvas html element
-        const prediction = await modelRef.current.predict(
+        const predictions = await modelRef.current.predict(
           webcamRef.current.canvas
         );
+        let highestProb = 0;
+        let predictedClass: string | null = null;
+
         for (let i = 0; i < maxPredictionsRef.current; i++) {
-          const classPrediction =
-            prediction[i].className +
-            ": " +
-            prediction[i].probability.toFixed(2);
-          // Update the content of the corresponding label div
+          const prediction = predictions[i];
+          const classPredictionText =
+            prediction.className + ": " + prediction.probability.toFixed(2);
+
           if (labelContainerRef.current.childNodes[i]) {
             (labelContainerRef.current.childNodes[i] as HTMLElement).innerHTML =
-              classPrediction;
+              classPredictionText;
           }
+
+          if (prediction.probability > highestProb) {
+            highestProb = prediction.probability;
+            predictedClass = prediction.className;
+          }
+        }
+        if (predictedClass) {
+          onPrediction({ trashType: predictedClass, confidence: highestProb });
+        } else {
+          onPrediction({ trashType: null, confidence: null });
         }
       } catch (error) {
         console.error("Error during prediction:", error);
-        // Optionally, you could stop the loop here if predictions consistently fail
-        // if (animationFrameIdRef.current) {
-        //   window.cancelAnimationFrame(animationFrameIdRef.current);
-        // }
+        onPrediction({ trashType: null, confidence: null });
       }
+    } else {
+      onPrediction({ trashType: null, confidence: null });
     }
   };
 
-  // Effect for cleanup: stops webcam and cancels animation frame when component unmounts
   useEffect(() => {
     return () => {
       if (webcamRef.current) {
@@ -135,7 +169,7 @@ const TeachableMachineClient = () => {
         window.cancelAnimationFrame(animationFrameIdRef.current);
       }
     };
-  }, []); // Empty dependency array ensures this runs once on mount and cleanup on unmount
+  }, []);
 
   return (
     <div className="flex flex-col items-center gap-4 p-4 border border-green-300 dark:border-green-600 rounded-lg bg-white/70 dark:bg-green-800/50 shadow-xl">
@@ -153,16 +187,12 @@ const TeachableMachineClient = () => {
         id="webcam-container"
         ref={webcamContainerRef}
         className="w-[200px] h-[200px] bg-gray-300 dark:bg-gray-600 rounded-md overflow-hidden shadow-inner border border-gray-400 dark:border-gray-500"
-      >
-        {/* Webcam canvas will be appended here by the init function */}
-      </div>
+      ></div>
       <div
         id="label-container"
         ref={labelContainerRef}
-        className="flex flex-col gap-1.5 mt-3 text-base text-green-700 dark:text-lime-300 w-full max-w-xs items-center"
-      >
-        {/* Prediction labels will be appended here by the init function */}
-      </div>
+        className="flex flex-col gap-1.5 mt-3 text-base text-green-700 dark:text-lime-300 w-full max-w-xs items-start"
+      ></div>
     </div>
   );
 };

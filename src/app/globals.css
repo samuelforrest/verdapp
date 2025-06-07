@@ -1,11 +1,10 @@
-@import "tailwindcss/preflight"; /* Replaces @tailwind base */
-@import "tailwindcss/utilities"; /* Replaces @tailwind components and @tailwind utilities */
+@import "tailwindcss/preflight";
+@import "tailwindcss/utilities";
 
 :root {
   --foreground-rgb: 0, 0, 0;
   --background-start-rgb: 214, 219, 220;
   --background-end-rgb: 255, 255, 255;
-  /* Climate-ish palette */
   --forest-green: 34, 139, 34;
   --earth-brown: 139, 69, 19;
   --sky-blue: 135, 206, 235;
@@ -16,15 +15,14 @@
 @media (prefers-color-scheme: dark) {
   :root {
     --foreground-rgb: 255, 255, 255;
-    --background-start-rgb: 10, 40, 10; /* Darker green for dark mode */
-    --background-end-rgb: 0, 20, 0; /* Even darker green */
+    --background-start-rgb: 10, 40, 10;
+    --background-end-rgb: 0, 20, 0;
 
-    /* Dark mode climate-ish palette */
-    --forest-green: 144, 238, 144; /* Lighter green for text */
-    --earth-brown: 210, 180, 140; /* Lighter brown for text */
-    --sky-blue: 173, 216, 230; /* Lighter blue */
-    --leaf-green: 173, 255, 47; /* Keep vibrant */
-    --sand-beige: 200, 200, 180; /* Darker beige */
+    --forest-green: 144, 238, 144;
+    --earth-brown: 210, 180, 140;
+    --sky-blue: 173, 216, 230;
+    --leaf-green: 173, 255, 47;
+    --sand-beige: 200, 200, 180;
   }
 }
 
