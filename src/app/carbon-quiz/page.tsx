@@ -138,7 +138,7 @@ export default function OnboardingForm() {
     setLoading(true);
     setAnalysisResult(null);
 
-    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc";
+    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc"; // Your API key here (consider backend proxy for security)
     const prompt = `
 Estimate the total lifetime carbon footprint (in tonnes CO2 equivalent) of a person given the following lifestyle data. Provide a clear, concise explanation of your reasoning.
 
@@ -148,16 +148,14 @@ ${JSON.stringify(data, null, 2)}
 
     try {
       const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/flash-lite:generateText?key=AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc`,
+        `https://generativelanguage.googleapis.com/v1beta/models/flash-lite:generateText?key=${apiKey}`,
         {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify({
-            prompt: {
-              text: prompt,
-            },
+            prompt: { text: prompt },
             temperature: 0.7,
             maxOutputTokens: 512,
           }),
@@ -172,7 +170,7 @@ ${JSON.stringify(data, null, 2)}
         setAnalysisResult("No response from Gemini API.");
       }
     } catch (error) {
-      setAnalysisResult("Error contacting Gemini API: " + error);
+      setAnalysisResult("Error contacting Gemini API: " + (error as Error).message);
     } finally {
       setLoading(false);
     }
@@ -181,7 +179,6 @@ ${JSON.stringify(data, null, 2)}
   const handleSubmit = async () => {
     if (validateSection()) {
       setSubmitted(true);
-      console.log("Submitted data:", formData);
       await analyzeCarbonUsage(formData);
     }
   };
@@ -198,13 +195,16 @@ ${JSON.stringify(data, null, 2)}
     return (
       <div className="p-6 max-w-xl mx-auto bg-white rounded shadow">
         <h2 className="text-xl font-bold mb-4">✅ Submission Complete</h2>
-        <pre className="bg-gray-100 p-4 rounded mb-4">
+
+        <pre className="bg-gray-100 p-4 rounded mb-4 whitespace-pre-wrap">
           {JSON.stringify(formData, null, 2)}
         </pre>
 
-        {loading && <p className="text-blue-600 mb-4">Analyzing with Gemini...</p>}
+        {loading && (
+          <p className="text-blue-600 mb-4 animate-pulse">⏳ Analyzing with Gemini...</p>
+        )}
 
-        {analysisResult && (
+        {analysisResult && !loading && (
           <div className="bg-green-100 p-4 rounded mb-4 whitespace-pre-wrap">
             <h3 className="font-semibold mb-2">♻️ Gemini's Carbon Footprint Estimate:</h3>
             <p>{analysisResult}</p>
