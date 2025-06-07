@@ -133,50 +133,35 @@ export default function OnboardingForm() {
     setErrors([]);
   };
 
-  // Improved Gemini API call with error handling and logging
+  // Call your own backend API, which calls Gemini securely with your API key
   async function analyzeCarbonUsage(data: FormState) {
     setLoading(true);
     setAnalysisResult(null);
 
-    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc"; // Consider securing in backend
-    const prompt = `
-Estimate the total lifetime carbon footprint (in tonnes CO2 equivalent) of a person given the following lifestyle data. Provide a clear, concise explanation of your reasoning.
-
-Data:
-${JSON.stringify(data, null, 2)}
-`;
-
     try {
-      const response = await fetch(
-        `https://generativelanguage.googleapis.com/v1beta/models/flash-lite:generateText?key=${apiKey}`,
-        {
-          method: "POST",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify({
-            prompt: { text: prompt },
-            temperature: 0.7,
-            maxOutputTokens: 512,
-          }),
-        }
-      );
+    const response = await fetch("/api/gemini", {
+        method: "POST",
+        headers: {
+        "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ formData: data }),
+    });
 
-      // Log response status for debugging
       console.log("API response status:", response.status, response.statusText);
 
       if (!response.ok) {
-        setAnalysisResult(`API error: ${response.status} ${response.statusText}`);
+        const errorText = await response.text();
+        setAnalysisResult(`API error: ${response.status} ${response.statusText} - ${errorText}`);
         setLoading(false);
         return;
       }
 
       const result = await response.json();
 
-      console.log("Full API response:", result);
+      console.log("Gemini analysis result:", result);
 
-      if (result.candidates && result.candidates.length > 0) {
-        setAnalysisResult(result.candidates[0].output);
+      if (result.analysis) {
+        setAnalysisResult(result.analysis);
       } else {
         setAnalysisResult("No response from Gemini API.");
       }
