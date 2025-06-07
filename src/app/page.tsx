@@ -1803,6 +1803,15 @@ const getBinForPrediction = (
 // List of supported country codes for the dropdown.
 const supportedCountries = Object.keys(countrySpecificBinInfo);
 
+// Sort countries alphabetically, but keep US at the top
+const sortedCountries = supportedCountries.sort((a, b) => {
+  if (a === "US") return -1;
+  if (b === "US") return 1;
+  return countrySpecificBinInfo[a].countryName.localeCompare(
+    countrySpecificBinInfo[b].countryName
+  );
+});
+
 // Main page component for the trash sorter application.
 export default function Home() {
   // State for the currently selected country code.
@@ -1892,7 +1901,7 @@ export default function Home() {
               onChange={(e) => setSelectedCountry(e.target.value)}
               className="mt-1 block w-full max-w-md mx-auto pl-3 pr-10 py-2 text-base border-stone-gray focus:outline-none focus:ring-pine-green focus:border-pine-green sm:text-sm rounded-md shadow-sm bg-white border"
             >
-              {supportedCountries.map((countryCode) => (
+              {sortedCountries.map((countryCode) => (
                 <option key={countryCode} value={countryCode}>
                   {countrySpecificBinInfo[countryCode].countryName}
                 </option>

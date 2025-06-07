@@ -71,10 +71,17 @@ const AboutPage = () => {
               Have questions or feedback? We’d love to hear from you! Reach out
               to us at{" "}
               <Link
-                href="mailto:contact@ecoscan.example.com"
+                href="mailto:kunseljchodak@gmail.com"
                 className="text-emerald-green hover:text-forest-green underline"
               >
-                contact@ecoscan.example.com
+                kunseljchodak@gmail.com
+              </Link>{" "}
+              and{" "}
+              <Link
+                href="mailto:sam@samuelforrest.me"
+                className="text-emerald-green hover:text-forest-green underline"
+              >
+                sam@samuelforrest.me
               </Link>
               .
             </p>
