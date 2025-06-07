@@ -162,8 +162,8 @@ const questions = [
         required: true,
       },
          {
-        name: "yes_or_no_try_to_reduce_food_waste",
-        label: "Do you actively try to reduce food waste?*",
+        name: "water_usage_per_day",
+        label: "Describe your average day water usage, when water is running for over 5 minutes (e.g. I shower 11 mins every morning hot)*",
         type: "text",
         required: true,
       },
