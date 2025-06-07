@@ -2,7 +2,6 @@
 
 import { useState } from "react";
 import TeachableMachineClient from "../components/TeachableMachineClient";
-import NavigationBar from "../components/NavigationBar";
 
 // Type definition for individual bin characteristics.
 interface BinInfo {
@@ -1811,25 +1810,21 @@ export default function Home() {
   // State for the prediction result from Teachable Machine.
   const [predictionResult, setPredictionResult] = useState<string | null>(null);
 
+  // URL for your Teachable Machine model.
+  // Ensure this is the full URL to the `model.json` file hosted by Teachable Machine.
+  const modelUrl = "https://teachablemachine.withgoogle.com/models/xBp9J61Qn/"; // Updated model URL
+
   // Retrieves bin information for the currently selected country.
   const currentBinInfo = countrySpecificBinInfo[selectedCountry];
 
-  // Callback function for when a prediction is made by TeachableMachineClient.
-  const handlePrediction = (
-    prediction: { className: string; probability: number }[] | null
-  ) => {
-    if (prediction && prediction.length > 0) {
-      // For now, just log the top prediction. This can be expanded later.
-      console.log("Top prediction:", prediction[0].className);
-      setPredictionResult(`Predicted: ${prediction[0].className}`);
-    } else {
-      setPredictionResult("No prediction yet.");
-    }
+  // Handler for when a prediction is made by the Teachable Machine.
+  const handlePrediction = (className: string) => {
+    setPredictionResult(`Predicted: ${className}`);
+    // Potentially trigger other actions based on prediction
   };
 
   return (
     <main className="flex flex-col min-h-screen bg-pale-leaf font-sans items-center text-forest-green p-4 md:p-8">
-      <NavigationBar />
       <div className="w-full max-w-6xl mx-auto mt-8 space-y-12">
         {/* Header section */}
         <header className="text-center space-y-4">
@@ -1851,15 +1846,28 @@ export default function Home() {
           <h2 className="text-3xl md:text-4xl font-serif text-pine-green mb-6 text-center">
             What item are you sorting?
           </h2>
-          <TeachableMachineClient onPrediction={handlePrediction} />
-          {/* Display prediction result */}
-          {predictionResult && (
-            <div className="mt-4 text-center p-4 bg-leaf-green/50 rounded-md">
-              <p className="text-lg text-pine-green font-semibold">
-                {predictionResult}
-              </p>
+          {/* Teachable Machine Client */}
+          <div className="bg-white p-6 rounded-xl shadow-2xl">
+            <TeachableMachineClient
+              modelUrl={modelUrl}
+              onPrediction={handlePrediction}
+            />
+            <p className="text-xs text-gray-600 mt-2 text-center">
+              For best accuracy, please use a solid white, black, or grey
+              background.
+            </p>
+            {/* Country Selector */}
+            <div className="mt-4">
+              {/* Display prediction result */}
+              {predictionResult && (
+                <div className="mt-4 text-center p-4 bg-leaf-green/50 rounded-md">
+                  <p className="text-lg text-pine-green font-semibold">
+                    {predictionResult}
+                  </p>
+                </div>
+              )}
             </div>
-          )}
+          </div>
         </section>
 
         {/* Country selection and bin information section */}

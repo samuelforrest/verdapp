@@ -1,19 +1,20 @@
-/* Tailwind CSS directives to include base, components, and utilities styles. */
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
 
-/* Default body styles: sets font, background color, and text color. */
+/* Global styles for the application */
+
+/* Define base styles for the body */
 body {
-  @apply font-sans bg-pale-leaf text-forest-green;
+  @apply font-sans bg-background-app text-text-on-light-primary; /* Apply default font, background, and text color */
 }
 
-/* Default heading styles: sets font and text color for all heading levels. */
+/* Define styles for headings */
 h1,
 h2,
 h3,
 h4,
 h5,
 h6 {
-  @apply font-serif text-pine-green;
+  @apply font-serif; /* Apply serif font to headings */
 }

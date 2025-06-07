@@ -1,43 +1,43 @@
 import type { Metadata } from "next";
-import { Geist, Geist_Mono } from "next/font/google";
+import { Nunito_Sans, Merriweather } from "next/font/google";
 import "./globals.css";
-import Script from "next/script";
+import NavigationBar from "@/components/NavigationBar";
 
-const geistSans = Geist({
-  variable: "--font-geist-sans",
+// Font configuration for Nunito Sans
+const nunitoSans = Nunito_Sans({
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-nunito-sans", // CSS variable for Nunito Sans
 });
 
-const geistMono = Geist_Mono({
-  variable: "--font-geist-mono",
+// Font configuration for Merriweather
+const merriweather = Merriweather({
+  weight: ["300", "400", "700"],
   subsets: ["latin"],
+  display: "swap",
+  variable: "--font-merriweather", // CSS variable for Merriweather
 });
 
+// Metadata for the application
 export const metadata: Metadata = {
-  title: "EcoHub: Trash Sorter & Carbon Quiz",
-  description:
-    "An application to help you sort trash and calculate your carbon footprint.",
+  title: "EcoScan",
+  description: "Scan products to find their eco-friendly alternatives!",
 };
 
+// Root layout component
 export default function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en" suppressHydrationWarning>
-      <body
-        className={`${geistSans.variable} ${geistMono.variable} antialiased`}
-      >
+    <html
+      lang="en"
+      className={`${nunitoSans.variable} ${merriweather.variable}`} // Apply font variables to HTML element
+    >
+      <body>
+        <NavigationBar />
         {children}
-        <Script
-          src="https://cdn.jsdelivr.net/npm/@tensorflow/tfjs@latest/dist/tf.min.js"
-          strategy="beforeInteractive"
-        />
-        <Script
-          src="https://cdn.jsdelivr.net/npm/@teachablemachine/image@latest/dist/teachablemachine-image.min.js"
-          strategy="beforeInteractive"
-        />
       </body>
     </html>
   );

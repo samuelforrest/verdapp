@@ -12,12 +12,23 @@ module.exports = {
     extend: {
       // Custom color palette.
       colors: {
-        "forest-green": "#228B22",
-        "pine-green": "#01796F",
-        "leaf-green": "#90EE90",
-        "pale-leaf": "#F0FFF0",
-        "bark-brown": "#8B4513",
-        "stone-gray": "#808080",
+        "forest-green": "#228B22", // Rich, dark green
+        "pine-green": "#01796F", // Deep, cool green
+        "emerald-green": "#50C878", // Bright, vibrant green
+        "mint-green": "#98FF98", // Light, refreshing green
+        "sage-green": "#B2AC88", // Muted, earthy green
+        "olive-green": "#808000", // Dull, yellowish-green
+        "fern-green": "#4F7942", // Natural, leafy green
+        "moss-green": "#8FBC8F", // Soft, muted green
+
+        "background-app": "#FAF0E6", // Linen - for general app background
+        "text-on-light-primary": "#374151", // Dark gray for primary text on light backgrounds
+        "text-on-light-secondary": "#6B7280", // Lighter gray for secondary text on light backgrounds
+
+        "text-on-dark-primary": "#F0FFF0", // Honeydew - for primary text on dark backgrounds
+        "text-on-dark-secondary": "#D3D3D3", // LightGray - for secondary text on dark backgrounds
+
+        // "accent": "#FFD700", // Gold (for highlights and calls to action)
       },
       // Custom font families.
       fontFamily: {
