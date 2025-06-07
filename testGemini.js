@@ -1,6 +1,6 @@
 import { GoogleGenAI } from "@google/genai";
 
-const apiKey = process.env.GEMINI_API_KEY; // Use environment variable for security
+const apiKey = process.env.AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc; // Use environment variable for security
 
 const ai = new GoogleGenAI({ apiKey });
 
