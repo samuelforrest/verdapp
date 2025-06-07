@@ -133,12 +133,12 @@ export default function OnboardingForm() {
     setErrors([]);
   };
 
-  // Call Gemini API to analyze carbon footprint
+  // Improved Gemini API call with error handling and logging
   async function analyzeCarbonUsage(data: FormState) {
     setLoading(true);
     setAnalysisResult(null);
 
-    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc"; // Your API key here (consider backend proxy for security)
+    const apiKey = "AIzaSyBarEOGpAPLcm0o8lmRZMBKGzhHeVG6lmc"; // Consider securing in backend
     const prompt = `
 Estimate the total lifetime carbon footprint (in tonnes CO2 equivalent) of a person given the following lifestyle data. Provide a clear, concise explanation of your reasoning.
 
@@ -162,7 +162,18 @@ ${JSON.stringify(data, null, 2)}
         }
       );
 
+      // Log response status for debugging
+      console.log("API response status:", response.status, response.statusText);
+
+      if (!response.ok) {
+        setAnalysisResult(`API error: ${response.status} ${response.statusText}`);
+        setLoading(false);
+        return;
+      }
+
       const result = await response.json();
+
+      console.log("Full API response:", result);
 
       if (result.candidates && result.candidates.length > 0) {
         setAnalysisResult(result.candidates[0].output);
@@ -170,6 +181,7 @@ ${JSON.stringify(data, null, 2)}
         setAnalysisResult("No response from Gemini API.");
       }
     } catch (error) {
+      console.error("Error during API call:", error);
       setAnalysisResult("Error contacting Gemini API: " + (error as Error).message);
     } finally {
       setLoading(false);
