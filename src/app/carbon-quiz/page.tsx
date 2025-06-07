@@ -2,6 +2,7 @@
 
 import { useState } from "react";
 import axios from "axios";
+import "./carbon-quiz.css";
 
 export default function CarbonFootprintQuiz() {
   // Define sections & their questions
