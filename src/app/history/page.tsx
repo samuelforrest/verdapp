@@ -1,6 +1,5 @@
-\
 // src/app/history/page.tsx
-import React from 'react';
+import React from "react";
 
 const HistoryPage = () => {
   return (
@@ -14,7 +13,8 @@ const HistoryPage = () => {
             The History page is currently under construction.
           </p>
           <p className="mt-4 text-gray-600">
-            This section will display your past scan results and CO2 calculations.
+            This section will display your past scan results and CO2
+            calculations.
           </p>
           {/* Placeholder for future graph or list of history items */}
           <div className="mt-8">
