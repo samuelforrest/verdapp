@@ -1,294 +1,275 @@
 "use client";
 
+import TeachableMachineClient from "@/components/TeachableMachineClient";
 import { useState } from "react";
-import axios from "axios";
 
-export default function CarbonFootprintQuiz() {
-  // Define sections & their questions
-  const sections = [
-    {
-      label: "Travel",
-      questions: [
-        {
-          id: 1,
-          question: "How many miles do you drive per week?",
-          type: "number",
-          placeholder: "e.g. 100",
-        },
-        {
-          id: 2,
-          question: "How often do you fly per year?",
-          type: "number",
-          placeholder: "e.g. 2",
-        },
-      ],
-    },
-    {
-      label: "Food",
-      questions: [
-        {
-          id: 3,
-          question: "Do you eat mostly plant-based or meat-based diet?",
-          type: "select",
-          options: ["Plant-based", "Mixed", "Meat-based"],
-        },
-      ],
-    },
-    {
-      label: "Home",
-      questions: [
-        {
-          id: 4,
-          question: "How many energy-efficient appliances do you have?",
-          type: "number",
-          placeholder: "e.g. 5",
-        },
-      ],
-    },
-    {
-      label: "Purchases",
-      questions: [
-        {
-          id: 5,
-          question: "How many items do you buy new per month?",
-          type: "number",
-          placeholder: "e.g. 3",
-        },
-      ],
-    },
-  ];
+interface PredictionResult {
+  trashType: string | null; // This will be the direct output from the model, e.g., "Class 6"
+  confidence: number | null;
+}
 
-  const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-  const [answers, setAnswers] = useState({});
-  const [loading, setLoading] = useState(false);
-  const [result, setResult] = useState(null);
+interface DisplayPrediction {
+  // This will store the type after mapping, e.g., "Glass"
+  trashType: string | null;
+  confidence: number | null;
+}
 
-  const currentSection = sections[currentSectionIndex];
+interface BinDetails {
+  bin: string;
+  color: string;
+  emoji: string;
+}
 
-  // Handle input change
-  const handleChange = (id, value) => {
-    setAnswers((prev) => ({ ...prev, [id]: value }));
+interface CountryBinInfo {
+  [country: string]: {
+    [trashType: string]: BinDetails;
   };
+}
 
-  // Check if current section's questions are all answered
-  const isCurrentSectionComplete = currentSection.questions.every(
-    (q) => answers[q.id] !== undefined && answers[q.id] !== ""
-  );
+// Changed "Class 6" to "Glass" as a key
+const countrySpecificBinInfo: CountryBinInfo = {
+  "United States": {
+    Recycle: { bin: "Recycling Bin", color: "bg-blue-500", emoji: "♻️" },
+    Compost: { bin: "Compost Bin", color: "bg-green-600", emoji: "🌿" },
+    Trash: { bin: "Trash Bin", color: "bg-gray-600", emoji: "🗑️" },
+    Glass: { bin: "Glass Recycling", color: "bg-sky-500", emoji: "🍾" },
+  },
+  Canada: {
+    Recycle: { bin: "Recycling Bin", color: "bg-blue-500", emoji: "♻️" },
+    Compost: { bin: "Compost Bin", color: "bg-green-600", emoji: "🌿" },
+    Trash: { bin: "Trash Bin", color: "bg-gray-600", emoji: "🗑️" },
+    Glass: { bin: "Glass Recycling", color: "bg-sky-500", emoji: "🍾" },
+  },
+  "United Kingdom": {
+    Recycle: { bin: "Mixed Recycling", color: "bg-orange-500", emoji: "♻️" },
+    Compost: { bin: "Food & Garden Waste", color: "bg-lime-600", emoji: "🥕" },
+    Trash: { bin: "General Waste", color: "bg-slate-600", emoji: "🗑️" },
+    Glass: { bin: "Glass - Separate", color: "bg-cyan-500", emoji: "🍾" },
+  },
+  Germany: {
+    Recycle: {
+      bin: "Yellow Bin (Packaging)",
+      color: "bg-yellow-400",
+      emoji: "🟡",
+    },
+    Compost: { bin: "Bio Waste", color: "bg-brown-500", emoji: "🍂" },
+    Trash: { bin: "Residual Waste", color: "bg-zinc-700", emoji: "🗑️" },
+    Glass: { bin: "Glass Container", color: "bg-green-400", emoji: "🍾" },
+    Paper: { bin: "Paper Bin", color: "bg-blue-400", emoji: "📰" }, // Example if model could detect paper
+  },
+  Other: {
+    // Fallback
+    Recycle: { bin: "Recycling Bin", color: "bg-blue-500", emoji: "♻️" },
+    Compost: { bin: "Compost Bin", color: "bg-green-600", emoji: "🌿" },
+    Trash: { bin: "Trash Bin", color: "bg-gray-600", emoji: "🗑️" },
+    Glass: { bin: "Glass Recycling", color: "bg-sky-500", emoji: "🍾" },
+  },
+};
 
-  // Move to next section
-  const goToNextSection = () => {
-    if (currentSectionIndex < sections.length - 1 && isCurrentSectionComplete) {
-      setCurrentSectionIndex((prev) => prev + 1);
+const SettingsIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    width="16px"
+    height="16px"
+    className="inline-block mr-1"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M9.594 3.94c.09-.542.56-.94 1.11-.94h2.593c.55 0 1.02.398 1.11.94l.213 1.281c.063.374.313.686.646.87.074.04.147.083.22.127.324.196.72.257 1.075.124l1.217-.456a1.125 1.125 0 0 1 1.37.49l1.296 2.247a1.125 1.125 0 0 1-.26 1.431l-1.003.827c-.293.24-.438.613-.431.992a6.759 6.759 0 0 1 0 1.905c-.007.379.137.752.431.992l1.003.827c.432.355.534.954.26 1.431l-1.296 2.247a1.125 1.125 0 0 1-1.37.49l-1.217-.456c-.355-.133-.75-.072-1.075.124a6.57 6.57 0 0 1-.22.128c-.333.183-.583.495-.646.87l-.213 1.28c-.09.543-.56.941-1.11.941h-2.594c-.55 0-1.02-.398-1.11-.94l-.213-1.281c-.062-.374-.312-.686-.646-.87a6.52 6.52 0 0 1-.22-.127c-.325-.196-.72-.257-1.076-.124l-1.217.456a1.125 1.125 0 0 1-1.37-.49l-1.296-2.247a1.125 1.125 0 0 1 .26-1.431l1.004-.827c.292-.24.437-.613.43-.992a6.759 6.759 0 0 1 0-1.905c.007-.379-.137-.752-.43-.992l-1.004-.827a1.125 1.125 0 0 1-.26-1.431l1.296-2.247a1.125 1.125 0 0 1 1.37-.49l1.217.456c.355.133.75.072 1.076-.124.072-.044.146-.087.22-.128.332-.183.582-.495.646-.87l.213-1.28Z"
+    />
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M15 12a3 3 0 1 1-6 0 3 3 0 0 1 6 0Z"
+    />
+  </svg>
+);
+
+const LeafIcon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-8 h-8"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M12 6.042A8.967 8.967 0 0 0 6 3.75c-1.052 0-2.062.18-3 .512v14.25A8.987 8.987 0 0 1 6 18c2.305 0 4.408.867 6 2.292m0-14.25a8.966 8.966 0 0 1 6-2.292c1.052 0 2.062.18 3 .512v14.25A8.987 8.987 0 0 0 18 18a8.967 8.967 0 0 0-6 2.292m0-14.25v14.25"
+    />
+  </svg>
+);
+
+const CO2Icon = () => (
+  <svg
+    xmlns="http://www.w3.org/2000/svg"
+    fill="none"
+    viewBox="0 0 24 24"
+    strokeWidth={1.5}
+    stroke="currentColor"
+    className="w-8 h-8"
+  >
+    <path
+      strokeLinecap="round"
+      strokeLinejoin="round"
+      d="M7.5 12.75A3.75 3.75 0 0 0 3.75 9h-1.5a.75.75 0 0 0-.75.75v3c0 .414.336.75.75.75h1.5a3.75 3.75 0 0 0 3.75-3.75Zm0 0h9.375m-13.125 0A3.75 3.75 0 0 1 7.5 9h1.5a.75.75 0 0 1 .75.75v3a.75.75 0 0 1-.75.75h-1.5A3.75 3.75 0 0 1 .375 12.75Zm13.125 0A3.75 3.75 0 0 0 10.125 9h1.5a.75.75 0 0 0 .75.75v3a.75.75 0 0 0 .75.75h1.5a3.75 3.75 0 0 0 3.75-3.75Zm0 0h3.375c.621 0 1.125-.504 1.125-1.125V10.5c0-.621-.504-1.125-1.125-1.125h-3.375"
+    />
+  </svg>
+);
+
+export default function Home() {
+  const [prediction, setPrediction] = useState<DisplayPrediction>({
+    // Stores mapped type
+    trashType: null,
+    confidence: null,
+  });
+  const [selectedCountry, setSelectedCountry] =
+    useState<string>("United States");
+
+  const handlePrediction = (modelOutput: PredictionResult) => {
+    let internalTrashType = modelOutput.trashType;
+    // Map "Class 6" from model to "Glass" for our internal logic
+    if (modelOutput.trashType === "Class 6") {
+      internalTrashType = "Glass";
     }
+    setPrediction({
+      trashType: internalTrashType,
+      confidence: modelOutput.confidence,
+    });
   };
 
-  // Move to previous section
-  const goToPreviousSection = () => {
-    if (currentSectionIndex > 0) {
-      setCurrentSectionIndex((prev) => prev - 1);
-    }
+  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCountry(event.target.value);
   };
 
-  // Submit form data
-  const handleSubmit = async () => {
-    setLoading(true);
-    try {
-      const { data } = await axios.post("/api/carbon-footprint", { answers });
-      setResult(data);
-    } catch (error) {
-      setResult({ error: "Failed to fetch AI results. Try again later." });
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  if (result) {
-    return (
-      <main className="min-h-screen flex flex-col items-center justify-center bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 font-inter">
-        <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 text-center border border-green-200 animate-fadeIn">
-          <h1 className="text-4xl font-extrabold mb-8 text-green-800 drop-shadow-lg">
-            Your Carbon Footprint Insight
-          </h1>
-          {result.error ? (
-            <p className="text-red-600 text-lg mb-8">{result.error}</p>
-          ) : (
-            <p className="text-green-900 text-xl whitespace-pre-line mb-8">
-              {result.message}
-            </p>
-          )}
-          <button
-            onClick={() => {
-              setResult(null);
-              setAnswers({});
-              setCurrentSectionIndex(0);
-            }}
-            className="inline-block px-10 py-3 bg-gradient-to-r from-green-600 to-lime-500 text-white font-semibold rounded-full shadow-lg hover:from-green-700 hover:to-lime-600 transition transform hover:scale-105 active:scale-95"
-          >
-            Restart
-          </button>
-        </div>
-      </main>
-    );
-  }
+  const currentBinsForCountry =
+    countrySpecificBinInfo[selectedCountry] || countrySpecificBinInfo["Other"]; // Fallback to "Other"
+  const currentBinInfo =
+    prediction.trashType && currentBinsForCountry
+      ? currentBinsForCountry[prediction.trashType]
+      : null;
 
   return (
-    <main className="min-h-screen bg-gradient-to-br from-green-50 via-lime-50 to-green-100 px-6 py-12 flex flex-col items-center font-inter">
-      <div className="max-w-lg w-full bg-white rounded-3xl shadow-xl p-12 border border-green-200 animate-fadeIn">
-        {/* Section Indicator */}
-        <div className="mb-8 text-center">
-          <p className="text-green-700 font-semibold tracking-wide">
-            Section {currentSectionIndex + 1} of {sections.length} —{" "}
-            <span className="text-green-900 text-xl font-bold">
-              {currentSection.label}
-            </span>
-          </p>
-          <div className="flex justify-center mt-2 gap-3">
-            {sections.map((section, idx) => (
-              <div
-                key={section.label}
-                className={`w-8 h-8 rounded-full cursor-pointer border-2 ${
-                  idx === currentSectionIndex
-                    ? "bg-green-600 border-green-600"
-                    : "border-green-300"
-                } flex items-center justify-center text-white font-bold select-none transition`}
-                onClick={() => setCurrentSectionIndex(idx)}
-                title={section.label}
-              >
-                {idx + 1}
-              </div>
-            ))}
+    <div className="flex flex-col min-h-screen items-center bg-lime-50 dark:bg-green-900 text-green-800 dark:text-lime-100 p-4 sm:p-6 md:p-8">
+      {/* Header */}
+      <header className="w-full max-w-md py-6">
+        <h1 className="text-3xl font-bold text-center text-green-700 dark:text-lime-200">
+          Trash Sorting App
+        </h1>
+      </header>
+
+      {/* Camera and Prediction Section */}
+      <main className="flex flex-col items-center w-full max-w-md flex-grow">
+        {/* Teachable Machine Client - Camera View and Start Button */}
+        <div className="w-full mb-6">
+          <TeachableMachineClient onPrediction={handlePrediction} />
+        </div>
+
+        {/* Prediction Info */}
+        <div className="w-full bg-white dark:bg-green-800/50 p-6 rounded-xl shadow-md mb-6">
+          <div className="flex justify-between items-center mb-2">
+            <div>
+              <p className="text-lg font-semibold text-green-700 dark:text-lime-200">
+                Type:
+              </p>
+              {prediction.trashType ? (
+                <p className="text-xl text-green-700 dark:text-lime-200">
+                  {prediction.trashType}
+                  {prediction.confidence && (
+                    <span className="text-sm opacity-75">
+                      {" "}
+                      ({(prediction.confidence * 100).toFixed(0)}% confident)
+                    </span>
+                  )}
+                </p>
+              ) : (
+                <p className="text-md opacity-75 text-green-600 dark:text-lime-300">
+                  [Waiting for prediction...]
+                </p>
+              )}
+            </div>
+            <div>
+              <p className="text-lg font-semibold text-green-700 dark:text-lime-200">
+                Bin:
+              </p>
+              {currentBinInfo ? (
+                <div className="flex items-center gap-2">
+                  <span className="text-3xl">{currentBinInfo.emoji}</span>
+                  <p
+                    className={`text-xl ${currentBinInfo.color.replace(
+                      "bg-",
+                      "text-"
+                    )}`}
+                  >
+                    {currentBinInfo.bin}
+                  </p>
+                </div>
+              ) : (
+                <p className="text-md opacity-75 text-green-600 dark:text-lime-300">
+                  [Waiting for type...]
+                </p>
+              )}
+            </div>
           </div>
         </div>
 
-        {/* Form */}
-        <form
-          onSubmit={(e) => {
-            e.preventDefault();
-            if (currentSectionIndex === sections.length - 1) {
-              handleSubmit();
-            } else {
-              goToNextSection();
-            }
-          }}
-          className="space-y-8"
-        >
-          {currentSection.questions.map((q) => (
-            <div key={q.id} className="flex flex-col">
+        {/* Settings Section */}
+        <div className="w-full bg-white dark:bg-green-800/50 p-6 rounded-xl shadow-md mb-6">
+          <h2 className="text-xl font-semibold text-green-700 dark:text-lime-200 mb-3 flex items-center">
+            <SettingsIcon /> Settings
+          </h2>
+          <div className="space-y-3">
+            <div className="flex justify-between items-center">
               <label
-                htmlFor={`q-${q.id}`}
-                className="mb-3 text-xl font-semibold text-green-800"
+                htmlFor="country"
+                className="text-green-700 dark:text-lime-200"
               >
-                {q.question}
+                Country:
               </label>
-              {q.type === "select" ? (
-                <select
-                  id={`q-${q.id}`}
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleChange(q.id, e.target.value)}
-                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
-                >
-                  <option value="" disabled>
-                    Select an option
+              <select
+                id="country"
+                name="country"
+                value={selectedCountry} // Controlled component
+                onChange={handleCountryChange} // Handle changes
+                className="p-2 rounded-md border border-green-300 dark:border-green-600 bg-lime-50 dark:bg-green-700 text-green-800 dark:text-lime-100 focus:ring-lime-500 focus:border-lime-500"
+              >
+                {Object.keys(countrySpecificBinInfo).map((country) => (
+                  <option key={country} value={country}>
+                    {country}
                   </option>
-                  {q.options.map((opt) => (
-                    <option key={opt} value={opt}>
-                      {opt}
-                    </option>
-                  ))}
-                </select>
-              ) : (
-                <input
-                  id={`q-${q.id}`}
-                  type={q.type}
-                  value={answers[q.id] || ""}
-                  onChange={(e) => handleChange(q.id, e.target.value)}
-                  placeholder={q.placeholder}
-                  min={0}
-                  className="p-4 rounded-xl border-2 border-green-300 bg-white text-green-900 text-lg shadow-sm focus:outline-none focus:ring-4 focus:ring-green-400 transition"
-                />
-              )}
+                ))}
+              </select>
             </div>
-          ))}
-
-          {/* Navigation Buttons */}
-          <div className="flex justify-between mt-6">
-            <button
-              type="button"
-              onClick={goToPreviousSection}
-              disabled={currentSectionIndex === 0}
-              className={`px-6 py-3 rounded-md font-semibold border ${
-                currentSectionIndex === 0
-                  ? "border-green-200 text-green-400 cursor-not-allowed"
-                  : "border-green-600 text-green-700 hover:bg-green-100"
-              } transition`}
-            >
-              Previous
-            </button>
-
-            <button
-              type="submit"
-              disabled={!isCurrentSectionComplete || loading}
-              className={`px-6 py-3 rounded-md font-semibold text-white ${
-                isCurrentSectionComplete && !loading
-                  ? "bg-green-600 hover:bg-green-700"
-                  : "bg-green-300 cursor-not-allowed"
-              } transition flex items-center gap-2`}
-            >
-              {loading && (
-                <svg
-                  className="animate-spin h-5 w-5 text-white"
-                  xmlns="http://www.w3.org/2000/svg"
-                  fill="none"
-                  viewBox="0 0 24 24"
-                >
-                  <circle
-                    className="opacity-25"
-                    cx="12"
-                    cy="12"
-                    r="10"
-                    stroke="currentColor"
-                    strokeWidth="4"
-                  />
-                  <path
-                    className="opacity-75"
-                    fill="currentColor"
-                    d="M4 12a8 8 0 018-8v4a4 4 0 00-4 4H4z"
-                  />
-                </svg>
-              )}
-              {currentSectionIndex === sections.length - 1 ? "Submit" : "Next"}
-            </button>
+            <div className="flex justify-between items-center">
+              <span className="text-green-700 dark:text-lime-200">
+                Feedback:
+              </span>
+              <button className="text-lime-600 dark:text-lime-300 hover:underline">
+                Send form
+              </button>
+            </div>
           </div>
-        </form>
-      </div>
+        </div>
+      </main>
 
-      <footer className="mt-10 text-center text-green-700 opacity-70 text-sm select-none">
-        &copy; {new Date().getFullYear()} Carbon Quiz. Made with{" "}
-        <span className="text-green-500">♥</span>
+      {/* Footer Buttons */}
+      <footer className="w-full max-w-md py-6 mt-auto">
+        <div className="flex justify-around">
+          <button className="p-3 bg-lime-200 dark:bg-green-700 rounded-lg shadow-md hover:bg-lime-300 dark:hover:bg-green-600 transition-colors">
+            <LeafIcon />
+          </button>
+          <button className="p-3 bg-lime-200 dark:bg-green-700 rounded-lg shadow-md hover:bg-lime-300 dark:hover:bg-green-600 transition-colors">
+            <CO2Icon />
+          </button>
+        </div>
       </footer>
-
-      <style jsx global>{`
-        @import url("https://fonts.googleapis.com/css2?family=Inter:wght@400;600;800&display=swap");
-
-        body {
-          font-family: "Inter", sans-serif;
-        }
-
-        /* FadeIn animation */
-        @keyframes fadeIn {
-          0% {
-            opacity: 0;
-            transform: translateY(15px);
-          }
-          100% {
-            opacity: 1;
-            transform: translateY(0);
-          }
-        }
-        .animate-fadeIn {
-          animation: fadeIn 0.5s ease forwards;
-        }
-      `}</style>
-    </main>
+    </div>
   );
 }
