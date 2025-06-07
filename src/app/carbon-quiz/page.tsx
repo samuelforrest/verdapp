@@ -5,72 +5,109 @@ import "./carbon-quiz.css";
 
 const questions = [
   {
-    section: "Travel",
+    section: "Personal Details (* denotes required)",
     fields: [
-      {
-        name: "car_miles",
-        label: "How long do you think you spend in a car per week (in hours)",
-        type: "number",
-        required: true,
-      },
-      {
-        name: "public_transport",
-        label: "How many miles do you travel per week by public transport?",
-        type: "number",
+        {
+        name: "dob",
+        label: "Please select your Date of Birth (DOB)?",
+        type: "date",
         required: false,
       },
+
       {
-        name: "flights_year",
-        label: "How many flights do you take per year?",
-        type: "number",
+        name: "country_current_residence",
+        label: "In which country are you currently residing in?*",
+        type: "text",
         required: true,
+      },
+
+      {
+        name: "country_majority_of_life_lived",
+        label: "In which country have you spent the majority of your life living in?*",
+        type: "text",
+        required: true,
+      },
+      {
+        name: "gender",
+        label: "What is your gender?",
+        type: "text",
+        required: false,
+      },
+        {
+        name: "occupation_type",
+        label: "What is your occupation. If unemployed, or a student, include? *",
+        type: "text",
+        required: false,
       },
     ],
   },
+
   {
-    section: "Home",
+    section: "Home & Energy",
     fields: [
       {
-        name: "home_size",
-        label: "What is the size of your home (in square meters)?",
+        name: "home_size_number_of_bedrooms",
+        label: "What is the size of your home (in number of bedrooms)?",
         type: "number",
-        required: true,
+        required: false,
+        min: 1, //cannot be a home if less than 1
+        max: 30, //results will be skewed if larger than 30 (more testing needed)
       },
       {
         name: "energy_type",
-        label: "What is your main energy source at home?",
+        label: "What is your main energy source at home? (renewable or grid mix)*",
         type: "text",
         required: true,
       },
       {
-        name: "electricity_usage",
-        label: "How much electricity do you use per month (kWh)?",
-        type: "number",
+        name: "energy_efficent_appliances_used_commonly_yes_or_now",
+        label: "Do you have many energy-efficent appliances in your house?",
+        type: "text",
         required: false,
       },
+        {
+        name: "type_of_heating",
+        label: "What type of heating do you use? (Gas, Electric or Oil)",
+        type: "text",
+        required: false,
+      },
+        {
+        name: "prompts_to_ai_per_day_on_average",
+        label: "How many prompts do you send to ai on average per day?*",
+        type: "text",
+        required: true,
+      },
+
     ],
   },
   {
-    section: "Purchases",
+    section: "Transportation",
     fields: [
       {
-        name: "clothes_per_month",
-        label: "How many new clothing items do you buy per month?",
-        type: "number",
+        name: "number_and_types_of_vehicles",
+        label: "Describe the number and types of any vehicles you own *",
+        type: "text",
         required: false,
       },
       {
-        name: "electronics_per_year",
-        label: "How many new electronic devices do you buy per year?",
+        name: "average_hours_in_a_car_per_day",
+        label: "On average, how many hours do you spend in a car per day *",
         type: "number",
-        required: false,
+        required: true,
       },
       {
-        name: "recycle",
-        label: "Do you regularly recycle? (yes/no)",
+        name: "average_international_flights_per_year",
+        label: "How many international flights do you take on average per year?",
         type: "text",
         required: true,
       },
+      {
+        name: "average_domestic_flights_per_year",
+        label: "How many domestic flights do you take on average a year?",
+        type: "text",
+        required: true,
+      },
+
     ],
   },
   {
@@ -78,16 +115,59 @@ const questions = [
     fields: [
       {
         name: "diet_type",
-        label: "What best describes your diet? (vegan, vegetarian, mixed, meat-heavy)",
+        label: "What best describes your diet? (vegan, vegetarian, mixed, meat-heavy)*",
         type: "text",
         required: true,
       },
       {
-        name: "food_waste",
-        label: "How much food do you waste per week (in kg)?",
-        type: "number",
+        name: "consumption_of_beef_or_lamb_per_week",
+        label: "How often do you consume beef of lamb per week",
+        type: "text",
         required: false,
       },
+        {
+        name: "average_percent_of_meal_wasted",
+        label: "On average, what percent (%) of your meal goes to food waste, i.e. leftovers?*",
+        type: "number",
+        required: true,
+      },
+         {
+        name: "yes_or_no_try_to_reduce_food_waste",
+        label: "Do you actively try to reduce food waste?*",
+        type: "text",
+        required: true,
+      },
+
+    ],
+  },
+    {
+    section: "Purchases & Other",
+    fields: [
+      {
+        name: "pets_number_and_type",
+        label: "How many, and what types of pets do you have",
+        type: "text",
+        required: false,
+      },
+      {
+        name: "where_investments_go",
+        label: "Do you invest, or store money in ethical / green index funds or investments or banks?",
+        type: "text",
+        required: false,
+      },
+        {
+        name: "clothes_purchased_per_month",
+        label: "On average, what number of clothes and physical assesories do you purchase per month?*",
+        type: "number",
+        required: true,
+      },
+         {
+        name: "yes_or_no_try_to_reduce_food_waste",
+        label: "Do you actively try to reduce food waste?*",
+        type: "text",
+        required: true,
+      },
+
     ],
   },
 ];
