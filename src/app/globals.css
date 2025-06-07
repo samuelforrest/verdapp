@@ -1,26 +1,45 @@
-@import "tailwindcss";
+@import "tailwindcss/preflight"; /* Replaces @tailwind base */
+@import "tailwindcss/utilities"; /* Replaces @tailwind components and @tailwind utilities */
 
 :root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
+  --foreground-rgb: 0, 0, 0;
+  --background-start-rgb: 214, 219, 220;
+  --background-end-rgb: 255, 255, 255;
+  /* Climate-ish palette */
+  --forest-green: 34, 139, 34;
+  --earth-brown: 139, 69, 19;
+  --sky-blue: 135, 206, 235;
+  --leaf-green: 173, 255, 47;
+  --sand-beige: 245, 245, 220;
 }
 
 @media (prefers-color-scheme: dark) {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
+    --foreground-rgb: 255, 255, 255;
+    --background-start-rgb: 10, 40, 10; /* Darker green for dark mode */
+    --background-end-rgb: 0, 20, 0; /* Even darker green */
+
+    /* Dark mode climate-ish palette */
+    --forest-green: 144, 238, 144; /* Lighter green for text */
+    --earth-brown: 210, 180, 140; /* Lighter brown for text */
+    --sky-blue: 173, 216, 230; /* Lighter blue */
+    --leaf-green: 173, 255, 47; /* Keep vibrant */
+    --sand-beige: 200, 200, 180; /* Darker beige */
   }
 }
 
 body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+  color: rgb(var(--forest-green));
+  background: linear-gradient(
+      to bottom,
+      transparent,
+      rgb(var(--background-end-rgb))
+    )
+    rgb(var(--background-start-rgb));
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

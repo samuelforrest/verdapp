@@ -1,15 +1,17 @@
 import Image from "next/image";
+import TeachableMachineClient from "@/components/TeachableMachineClient"; // Import the new component
 
 export default function Home() {
   return (
-    <main className="flex min-h-screen flex-col items-center justify-between p-24">
-      <div className="z-10 w-full max-w-5xl items-center justify-between font-mono text-sm lg:flex">
-        <p className="fixed left-0 top-0 flex w-full justify-center border-b border-gray-300 bg-gradient-to-b from-zinc-200 pb-6 pt-8 backdrop-blur-2xl dark:border-neutral-800 dark:bg-zinc-800/30 dark:from-inherit lg:static lg:w-auto  lg:rounded-xl lg:border lg:bg-gray-200 lg:p-4 lg:dark:bg-zinc-800/30">
+    <main className="flex min-h-screen flex-col items-center justify-between p-8 sm:p-12 md:p-24 bg-lime-50 dark:bg-green-900 text-green-800 dark:text-lime-100">
+      {/* Header Section */}
+      <div className="z-10 w-full max-w-5xl flex flex-col sm:flex-row items-center justify-between font-mono text-sm">
+        <p className="w-full sm:w-auto flex justify-center sm:justify-start border-b border-green-300 bg-gradient-to-b from-lime-200 pb-4 pt-6 backdrop-blur-2xl dark:border-green-700 dark:bg-green-800/60 dark:from-inherit lg:rounded-xl lg:border lg:bg-lime-100 lg:p-4 lg:dark:bg-green-800/60 text-center sm:text-left mb-4 sm:mb-0">
           Trash Sorting App
         </p>
-        <div className="fixed bottom-0 left-0 flex h-48 w-full items-end justify-center bg-gradient-to-t from-white via-white dark:from-black dark:via-black lg:static lg:size-auto lg:bg-none">
+        <div className="flex h-auto items-end justify-center lg:static lg:size-auto lg:bg-none opacity-75 hover:opacity-100 transition-opacity">
           <a
-            className="pointer-events-none flex place-items-center gap-2 p-8 lg:pointer-events-auto lg:p-0"
+            className="flex place-items-center gap-2 p-4 lg:p-0"
             href="https://vercel.com?utm_source=create-next-app&utm_medium=appdir-template&utm_campaign=create-next-app"
             target="_blank"
             rel="noopener noreferrer"
@@ -19,57 +21,42 @@ export default function Home() {
               src="/vercel.svg"
               alt="Vercel Logo"
               className="dark:invert"
-              width={100}
-              height={24}
+              width={80}
+              height={20}
               priority
             />
           </a>
         </div>
       </div>
 
-      <div className="relative z-[-1] flex place-items-center before:absolute before:h-[300px] before:w-full before:-translate-x-1/2 before:rounded-full before:bg-gradient-radial before:from-white before:to-transparent before:blur-2xl before:content-[''] after:absolute after:-z-20 after:h-[180px] after:w-full after:translate-x-1/3 after:bg-gradient-conic after:from-sky-200 after:via-blue-200 after:blur-2xl after:content-[''] before:dark:bg-gradient-to-br before:dark:from-transparent before:dark:to-blue-700 before:dark:opacity-10 after:dark:from-sky-900 after:dark:via-[#0141ff] after:dark:opacity-40 sm:before:w-[480px] sm:after:w-[240px] before:lg:h-[360px]">
-        {/* Camera View Component */}
-        <div className="w-full max-w-md h-96 bg-gray-200 dark:bg-gray-700 flex items-center justify-center rounded-lg shadow-lg">
-          <p className="text-gray-500 dark:text-gray-400">
-            Camera Feed Placeholder
-          </p>
-        </div>
+      {/* Camera Feed Section - Replaced with TeachableMachineClient */}
+      <div className="w-full max-w-2xl flex flex-col items-center">
+        <TeachableMachineClient />
       </div>
 
-      <div className="mb-32 grid text-center lg:mb-0 lg:w-full lg:max-w-5xl lg:grid-cols-3 lg:text-left">
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
-            Detected Item{" "}
-            <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
-              -&gt;
-            </span>
-          </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            [Item Name Placeholder]
-          </p>
-        </div>
-
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
+      {/* Information Cards Section - This will be at the bottom */}
+      <div className="w-full max-w-5xl grid grid-cols-1 md:grid-cols-2 gap-8 text-center md:text-left">
+        <div className="group rounded-xl border border-green-300 dark:border-green-700 bg-white dark:bg-green-800/50 p-6 shadow-md transition-all hover:shadow-lg hover:border-green-400 dark:hover:border-green-500">
+          <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-lime-200">
             Trash Type{" "}
             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
               -&gt;
             </span>
           </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            [Trash/Recycle/Compost Placeholder]
+          <p className="m-0 max-w-[30ch] text-sm opacity-75 text-green-600 dark:text-lime-300 mx-auto md:mx-0">
+            [Model Output: Recycle/Compost/Trash]
           </p>
         </div>
 
-        <div className="group rounded-lg border border-transparent px-5 py-4 transition-colors hover:border-gray-300 hover:bg-gray-100 hover:dark:border-neutral-700 hover:dark:bg-neutral-800/30">
-          <h2 className="mb-3 text-2xl font-semibold">
+        <div className="group rounded-xl border border-green-300 dark:border-green-700 bg-white dark:bg-green-800/50 p-6 shadow-md transition-all hover:shadow-lg hover:border-green-400 dark:hover:border-green-500">
+          <h2 className="mb-3 text-2xl font-semibold text-green-700 dark:text-lime-200">
             Designated Bin{" "}
             <span className="inline-block transition-transform group-hover:translate-x-1 motion-reduce:transform-none">
               -&gt;
             </span>
           </h2>
-          <p className="m-0 max-w-[30ch] text-sm opacity-50">
-            [Bin Image/Color Placeholder]
+          <p className="m-0 max-w-[30ch] text-sm opacity-75 text-green-600 dark:text-lime-300 mx-auto md:mx-0">
+            [Corresponding Bin Image/Color]
           </p>
         </div>
       </div>
