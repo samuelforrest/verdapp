@@ -1,0 +1,13 @@
+{
+  "version": "2.0.0",
+  "tasks": [
+    {
+      "args": ["run", "dev"],
+      "command": "npm",
+      "isBackground": true,
+      "label": "Run Next.js app in development mode",
+      "problemMatcher": ["$next-tsc-watch"],
+      "type": "shell"
+    }
+  ]
+}
