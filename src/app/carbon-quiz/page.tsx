@@ -263,6 +263,7 @@ const questions = [
   },
   { // This section is about the user's diet and food waste
     section: "Food",
+    
     fields: [
       {
         name: "diet_type",
