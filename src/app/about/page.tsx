@@ -27,6 +27,18 @@ const AboutPage = () => {
 
           <section>
             <h2 className="text-3xl font-semibold text-pine-green mb-3">
+              Social Impact
+            </h2>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              We are raising awareness of carbon footprint by helping users to visualise their carbon footprint and trash habits.
+              We are also creating real behavioral change by tracking these CO2 and waste, and giving practical suggestions of how to reduce them,
+              or to put them into the correct bins, according to their country.
+
+            </p>
+          </section>
+
+          <section>
+            <h2 className="text-3xl font-semibold text-pine-green mb-3">
               Features
             </h2>
             <ul className="list-disc list-inside text-lg text-gray-700 space-y-2 pl-4">
@@ -79,6 +91,11 @@ const AboutPage = () => {
               recommendations and the calculation of your average CO2 emissions
               lifetime. This could not be done with a simple mathematical formula,
               as there are so many parameters and things to consider.
+              <br></br>
+              <br></br>
+              <p>The hardest technology to implement was the Supabase SQL database, so we decomposed the problem, 
+                removing log-in/sign-up systems, and making a leaderboard system with unique user-generated usernames.
+              </p>
             </p>
           </section>
 
