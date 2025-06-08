@@ -34,7 +34,7 @@ const infoSection = {
           className="rounded-full w-40 h-40 object-cover"
         />
       </div>
-      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator</h2>
+      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator NEEDS STYLING TO HEX VALUE OF LOGO</h2>
       <p>
         This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
         Your answers are anonymous and used only for this analysis.
