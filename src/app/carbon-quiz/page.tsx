@@ -3,19 +3,19 @@
 import React, { useState } from "react";
 import "./carbon-quiz.css";
 
-// Add an info section as section 0
+// This is section 0, which is information to the user before starting the quiz.
 const infoSection = {
   section: "Welcome to the Carbon Footprint Quiz",
   fields: [],
   info: (
     <div className="space-y-4">
-      <h2 className="text-2xl font-bold text-green-700">🌱 Carbon Footprint Quiz</h2>
+      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator</h2>
       <p>
         This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
         Your answers are anonymous and used only for this analysis.
       </p>
       <p>
-        <strong>Sources / Assumptions</strong>
+        <strong>Sources / Assumptions:</strong>
         <ul className="list-disc ml-6">
           <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
           <li>The average human emits 4.8 tonnes per year. </li>
@@ -29,12 +29,12 @@ const infoSection = {
       <p>
         <strong>Privacy:</strong> The data you send is not seen by anyone on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
       </p>
-      <p><strong>Technical Details: </strong>Data from the form is sent via JSON to Gemini Flash 2.0 AI model.</p>
+      <p><strong>Technical Details:</strong> Data from the form is sent via JSON to Gemini Flash 2.0 AI model.</p>
       <button
         className="mt-6 px-6 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors"
         onClick={() => window.dispatchEvent(new CustomEvent("start-quiz"))}
       >
-        Start Quiz →
+        Start The Quiz -→
       </button>
     </div>
   ),
@@ -42,14 +42,14 @@ const infoSection = {
 
 const questions = [
   infoSection,
-  {
+  {//Section 1: Personal Details
     section: "Personal Details (* denotes required)",
     fields: [
       {
         name: "age_range",
         label: "What is your approximate age range?",
         type: "radio",
-        required: false,
+        required: true,
         options: [
           "<18 years",
           "18-30 years", 
@@ -60,7 +60,7 @@ const questions = [
       },
       {
         name: "country_current_residence",
-        label: "In which region are you currently residing?*",
+        label: "In which region are you currently residing?",
         type: "radio",
         required: true,
         options: [
@@ -74,7 +74,7 @@ const questions = [
       },
       {
         name: "country_majority_of_life_lived", 
-        label: "In which region have you spent the majority of your life living in?*",
+        label: "In which region have you spent the majority of your life living in?",
         type: "radio",
         required: true,
         options: [
@@ -100,7 +100,7 @@ const questions = [
       },
       {
         name: "occupation_type",
-        label: "What is your primary occupation type?*",
+        label: "What is your primary occupation type?",
         type: "radio", 
         required: true,
         options: [
@@ -189,19 +189,9 @@ const questions = [
     fields: [
       {
         name: "number_and_types_of_vehicles",
-        label: "Which best describes your vehicle ownership?*",
-        type: "radio",
+        label: "Describe the number and types of vehicles you own?",
+        type: "text", //This must be text - mutliselect not supported by some browsers
         required: true,
-        options: [
-          "No vehicles",
-          "Bicycle/E-bike only",
-          "Motorcycle/Scooter",
-          "One small/efficient car (gas/diesel)",
-          "One large car/SUV/truck (gas/diesel)",
-          "Multiple gas/diesel cars",
-          "Electric Vehicle (EV)",
-          "Hybrid Vehicle"
-        ]
       },
       {
         name: "average_hours_in_a_car_per_day",
@@ -210,9 +200,11 @@ const questions = [
         required: true,
         options: [
           "0 hours (or very rarely)",
-          "Less than 1 hour",
-          "1-2 hours",
-          "2-3 hours",
+          "Around 30 minutes",
+          "Around 1 hour",
+          "Around 1 hour 30 minutes",
+          "Around 2 hours",
+          "Around 2 hours 30 minutes",
           "More than 3 hours"
         ]
       },
@@ -223,7 +215,7 @@ const questions = [
         required: true,
         options: [
           "None",
-          "1 short-haul (e.g., within continent)",
+          "1 short-haul (e.g., within your continent)",
           "1 long-haul (e.g., intercontinental)",
           "2-3 short-haul",
           "2-3 long-haul",
@@ -237,10 +229,12 @@ const questions = [
         required: true,
         options: [
           "None",
-          "1-2 flights",
-          "3-5 flights",
-          "6-10 flights",
-          "More than 10 flights"
+          "1 flight",
+          "2 flights",
+          "3 flights",
+          "4 flights",
+          "5-7 flights",
+          "8+ flights"
         ]
       }
     ]
@@ -304,17 +298,9 @@ const questions = [
     fields: [
       {
         name: "pets_number_and_type",
-        label: "How many pets do you have, and what type?",
-        type: "radio",
+        label: "Describe the pets you have",
+        type: "text",
         required: false,
-        options: [
-          "No pets",
-          "Small pet(s) (e.g., fish, hamster)",
-          "Cat(s)",
-          "Medium dog(s)",
-          "Large dog(s)",
-          "Multiple pets (mix of cat/dog)"
-        ]
       },
       {
         name: "where_investments_go",
@@ -484,7 +470,7 @@ export default function OnboardingForm() {
 
         {apiError && !loading && (
           <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
-            <h3 className="font-semibold mb-2">❌ Analysis Error</h3>
+            <h3 className="font-semibold mb-2">❌ Analysis Error, try again or contact us.</h3>
             <p>{apiError}</p>
           </div>
         )}
@@ -537,7 +523,7 @@ export default function OnboardingForm() {
 
             {/* Recommendations */}
             <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-              <h3 className="text-lg font-semibold text-green-800 mb-4">💡 Personalized Recommendations</h3>
+              <h3 className="text-lg font-semibold text-green-800 mb-4">💡 Personalized AI Recommendations</h3>
               <div className="space-y-3">
                 {analysisResult.recommendations.map((recommendation, index) => (
                   <div key={index} className="flex items-start space-x-3">
@@ -642,7 +628,7 @@ export default function OnboardingForm() {
         <div className="bg-red-50 border border-red-200 text-red-700 p-4 rounded-md mt-6">
           <div className="flex items-center space-x-2 mb-2">
             <span>⚠️</span>
-            <strong>Please complete the following required fields:</strong>
+            <strong>Data Missing Error: Please complete the following required fields:</strong>
           </div>
           <ul className="list-disc ml-6 space-y-1">
             {errors.map((err, index) => (
