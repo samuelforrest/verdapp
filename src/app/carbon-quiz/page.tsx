@@ -59,7 +59,7 @@ const infoSection = {
         <strong>Note:</strong> This is an demonstrational educational tool, and due to AI limitations, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span> AI Latency can vary. Allow at least 20 seconds before trying again.
       </p>
       <p>
-        <strong>Privacy:</strong> The data you send is <span className="font-semibold text-green-700">not seen by anyone</span> on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
+        <strong>Privacy:</strong> The data you send is <span className="font-semibold text-green-700">not seen by anyone</span> on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz. At the end, please only enter an <span className="font-semibold text-green-700">appropriate</span> username into the leaderboard, if you wish to be displayed to other users.
       </p>
       <p><strong>Technical Details:</strong> Data from the form is sent via JSON format to Gemini Flash 2.0 AI model. At the end of the quiz you can see the exact data sent to Gemini.</p>
       <button
@@ -631,7 +631,7 @@ export default function OnboardingForm() {
               <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
                 <h3 className="text-lg font-semibold text-purple-700 mb-4">🏆 Save to Public Leaderboard</h3>
                 <p className="text-gray-700 mb-4">
-                  Want to see how you compare with others? Save your results to our public leaderboard!
+                  Want to see how you compare with others online, so please save to the public leaderboard.
                 </p>
                 <div className="flex gap-3 items-end">
                   <div className="flex-1">
@@ -665,8 +665,8 @@ export default function OnboardingForm() {
             {saveSuccess && (
               <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
                 <p className="font-semibold">🎉 Success! Your results have been saved to the leaderboard.</p>
-                <a href="/leaderboard" className="text-green-600 hover:text-green-800 underline">
-                  View the leaderboard →
+                <a href="/history" className="text-green-600 hover:text-green-800 underline">
+                  View the leaderboard -→
                 </a>
               </div>
             )}
@@ -676,7 +676,7 @@ export default function OnboardingForm() {
         {/* Form Data Summary in JSON with collapsable */}
         <details className="mt-8 bg-gray-50 p-4 rounded-lg">
           <summary className="font-medium text-gray-700 mb-2">
-            🤓 View Your Submitted Data (JSON format)
+            🤓 View Your Submitted Data (JSON format for nerds)
           </summary>
           <pre className="bg-white p-4 rounded border text-xs overflow-auto max-h-64">
             {JSON.stringify(formData, null, 2)}
@@ -688,13 +688,13 @@ export default function OnboardingForm() {
             className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             onClick={handleReset}
           >
-            🔄 Take the Quiz Again
+            Repeat Quiz
           </button>
           <a
             href="/leaderboard"
             className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-decoration-none"
           >
-            🏆 View Leaderboard
+            View Leaderboard
           </a>
         </div>
       </div>

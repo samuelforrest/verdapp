@@ -36,7 +36,6 @@ export default function LeaderboardPage() {
       setLoading(true);
       setError(null);
 
-      // Fetch leaderboard entries from Supabase
       const { data, error } = await supabase
         .from('carbon_leaderboard')
         .select('*')
@@ -46,7 +45,6 @@ export default function LeaderboardPage() {
       if (error) throw error;
       setEntries(data || []);
     } catch (err) {
-      console.error('Error fetching leaderboard:', err);
       setError('Failed to load leaderboard. Please try again later.');
     } finally {
       setLoading(false);
@@ -61,210 +59,6 @@ export default function LeaderboardPage() {
     });
   };
 
-  const styles = {
-    container: {
-      minHeight: '100vh',
-      backgroundColor: '#f8fffe',
-      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
-    },
-    header: {
-      backgroundColor: '#2ab985',
-      color: 'white',
-      padding: '20px 0',
-      boxShadow: '0 2px 4px rgba(0,0,0,0.1)',
-    },
-    headerContent: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '0 20px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-    },
-    title: {
-      fontSize: '2rem',
-      fontWeight: 'bold',
-      margin: 0,
-    },
-    nav: {
-      display: 'flex',
-      gap: '20px',
-      alignItems: 'center',
-    },
-    navLink: {
-      color: 'white',
-      textDecoration: 'none',
-      padding: '8px 16px',
-      borderRadius: '4px',
-      transition: 'background-color 0.3s',
-    },
-    main: {
-      maxWidth: '1200px',
-      margin: '0 auto',
-      padding: '40px 20px',
-    },
-    introSection: {
-      backgroundColor: 'white',
-      padding: '30px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      marginBottom: '30px',
-      textAlign: 'center' as const,
-    },
-    controlsSection: {
-      backgroundColor: 'white',
-      padding: '20px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      marginBottom: '30px',
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      flexWrap: 'wrap' as const,
-      gap: '15px',
-    },
-    sortButton: {
-      padding: '10px 20px',
-      borderRadius: '6px',
-      border: 'none',
-      cursor: 'pointer',
-      fontWeight: '600',
-      transition: 'all 0.3s',
-    },
-    sortButtonActive: {
-      backgroundColor: '#2ab985',
-      color: 'white',
-    },
-    sortButtonInactive: {
-      backgroundColor: '#f3f4f6',
-      color: '#6b7280',
-    },
-    entryCard: {
-      backgroundColor: 'white',
-      padding: '25px',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-      marginBottom: '20px',
-      border: '1px solid #e5e7eb',
-    },
-    entryHeader: {
-      display: 'flex',
-      justifyContent: 'space-between',
-      alignItems: 'center',
-      marginBottom: '20px',
-      paddingBottom: '15px',
-      borderBottom: '2px solid #f3f4f6',
-    },
-    rankBadge: {
-      backgroundColor: '#fbbf24',
-      color: '#92400e',
-      padding: '6px 12px',
-      borderRadius: '20px',
-      fontSize: '0.9rem',
-      fontWeight: '600',
-    },
-    userName: {
-      fontSize: '1.3rem',
-      fontWeight: 'bold',
-      color: '#1f2937',
-      margin: 0,
-    },
-    entryDate: {
-      color: '#6b7280',
-      fontSize: '0.9rem',
-    },
-    statsGrid: {
-      display: 'grid',
-      gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))',
-      gap: '20px',
-      marginBottom: '25px',
-    },
-    statCard: {
-      padding: '20px',
-      borderRadius: '8px',
-      textAlign: 'center' as const,
-    },
-    statValue: {
-      fontSize: '1.8rem',
-      fontWeight: 'bold',
-      marginBottom: '5px',
-    },
-    statLabel: {
-      fontSize: '0.9rem',
-      opacity: 0.8,
-    },
-    sectionTitle: {
-      fontSize: '1.1rem',
-      fontWeight: '600',
-      marginBottom: '15px',
-      color: '#374151',
-    },
-    contributorsList: {
-      display: 'flex',
-      gap: '10px',
-      marginBottom: '20px',
-      flexWrap: 'wrap' as const,
-    },
-    contributorBadge: {
-      backgroundColor: '#fef3c7',
-      color: '#d97706',
-      padding: '6px 12px',
-      borderRadius: '20px',
-      fontSize: '0.9rem',
-      fontWeight: '500',
-    },
-    recommendationsList: {
-      listStyle: 'none',
-      padding: 0,
-      margin: 0,
-    },
-    recommendationItem: {
-      backgroundColor: '#f0fdf4',
-      padding: '12px 16px',
-      borderRadius: '6px',
-      marginBottom: '8px',
-      borderLeft: '4px solid #22c55e',
-    },
-    emptyState: {
-      textAlign: 'center' as const,
-      padding: '60px 20px',
-      backgroundColor: 'white',
-      borderRadius: '12px',
-      boxShadow: '0 4px 6px rgba(0,0,0,0.1)',
-    },
-    emptyStateIcon: {
-      fontSize: '4rem',
-      marginBottom: '20px',
-    },
-    takeQuizButton: {
-      backgroundColor: '#2ab985',
-      color: 'white',
-      padding: '12px 24px',
-      border: 'none',
-      borderRadius: '6px',
-      fontSize: '1.1rem',
-      fontWeight: '600',
-      cursor: 'pointer',
-      textDecoration: 'none',
-      display: 'inline-block',
-      transition: 'background-color 0.3s',
-    },
-    loading: {
-      textAlign: 'center' as const,
-      padding: '60px 20px',
-      fontSize: '1.1rem',
-      color: '#6b7280',
-    },
-    error: {
-      backgroundColor: '#fee2e2',
-      color: '#dc2626',
-      padding: '15px',
-      borderRadius: '6px',
-      marginBottom: '20px',
-      textAlign: 'center' as const,
-    },
-  };
-
   const getRankSuffix = (rank: number) => {
     if (rank === 1) return '🥇';
     if (rank === 2) return '🥈';
@@ -272,163 +66,124 @@ export default function LeaderboardPage() {
     return `#${rank}`;
   };
 
-  if (loading) {
-    return (
-      <div style={styles.container}>
-        <div style={styles.loading}>
-          
-          The carbon footprint leaderboard is loading...
-          
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div style={styles.container}>
-      <header style={styles.header}>
-        <div style={styles.headerContent}>
-          <h1 style={styles.title}>🌱 Carbon Tracker</h1>
-          {/* Removed navigation buttons from the top */}
-        </div>
-      </header>
+    <div className="min-h-screen bg-[#f8fffe] py-10">
+      <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
+        <h1 className="text-2xl font-bold text-green-700 mb-2 text-center">🌱 Carbon Tracker Leaderboard</h1>
+        <p className="text-gray-600 text-center mb-6">
+          See how other people are doing with their environmental impact. <br></br><span className="font-semibold">Note: Lower is better!</span>
+        </p>
 
-      <main style={styles.main}>
-        <div style={styles.introSection}>
-          <h2 style={{ margin: '0 0 15px 0', color: '#1f2937', fontSize: '2rem' }}>
-            🏆 Global Carbon Footprint Leaderboard
-          </h2>
-          <p style={{ margin: '0 0 10px 0', color: '#6b7280', fontSize: '1.1rem' }}>
-            See how people around the world are doing with their carbon emissions!
-          </p>
-          <p style={{ margin: 0, color: '#6b7280' }}>
-            Lower numbers mean better environmental impact. Take the quiz to join the leaderboard!
-          </p>
+        <div className="flex justify-center gap-3 mb-6">
+          <button
+            onClick={() => setSortBy('lowest')}
+            className={`px-4 py-2 rounded font-medium transition-colors ${
+              sortBy === 'lowest'
+                ? 'bg-green-700 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-green-100'
+            }`}
+          >
+            Lowest First
+          </button>
+          <button
+            onClick={() => setSortBy('highest')}
+            className={`px-4 py-2 rounded font-medium transition-colors ${
+              sortBy === 'highest'
+                ? 'bg-green-700 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-green-100'
+            }`}
+          >
+            Highest First
+          </button>
         </div>
+
+        {loading && (
+          <div className="text-center text-gray-500 py-10">The carbon footprint leaderboard is loading...</div>
+        )}
 
         {error && (
-          <div style={styles.error}>
+          <div className="bg-red-100 border border-red-400 text-red-600 px-4 py-3 rounded mb-6 text-center">
             {error}
           </div>
         )}
 
-        {entries.length === 0 && !loading ? (
-          <div style={styles.emptyState}>
-            <div style={styles.emptyStateIcon}>🌍</div>
-            <h3 style={{ fontSize: '1.5rem', marginBottom: '15px', color: '#374151' }}>
-              No Entries Yet
-            </h3>
-            <p style={{ marginBottom: '25px', color: '#6b7280', fontSize: '1.1rem' }}>
+        {!loading && entries.length === 0 && (
+          <div className="text-center py-10">
+            <div className="text-4xl mb-2">🌍</div>
+            <div className="text-lg font-semibold mb-2">No Entries Yet</div>
+            <p className="text-gray-600 mb-4">
               Be the first to take the carbon footprint quiz and appear on the leaderboard!
             </p>
-            <Link href="/quiz" style={styles.takeQuizButton}>
+            <Link
+              href="/quiz"
+              className="inline-block px-6 py-2 bg-green-700 text-white rounded font-medium hover:bg-green-600 transition-colors"
+            >
               Take the Quiz 🌱
             </Link>
           </div>
-        ) : (
-          <div>
-            <div style={styles.controlsSection}>
-              <h2 style={{ fontSize: '1.5rem', margin: 0, color: '#1f2937' }}>
-                Showing {entries.length} {entries.length === 1 ? 'entry' : 'entries'}
-              </h2>
-              <div style={{ display: 'flex', gap: '10px' }}>
-                <button
-                  onClick={() => setSortBy('lowest')}
-                  style={{
-                    ...styles.sortButton,
-                    ...(sortBy === 'lowest' ? styles.sortButtonActive : styles.sortButtonInactive)
-                  }}
-                >
-                  🌱 Lowest First (Best)
-                </button>
-                <button
-                  onClick={() => setSortBy('highest')}
-                  style={{
-                    ...styles.sortButton,
-                    ...(sortBy === 'highest' ? styles.sortButtonActive : styles.sortButtonInactive)
-                  }}
-                >
-                  🔥 Highest First
-                </button>
-              </div>
-            </div>
-            
+        )}
+
+        {!loading && entries.length > 0 && (
+          <div className="space-y-4">
             {entries.map((entry, index) => (
-              <div key={entry.id} style={styles.entryCard}>
-                <div style={styles.entryHeader}>
-                  <div style={{ display: 'flex', alignItems: 'center', gap: '15px' }}>
-                    <span style={styles.rankBadge}>
-                      {getRankSuffix(index + 1)}
+              <div
+                key={entry.id}
+                className="border border-gray-200 rounded-lg p-4 flex flex-col gap-2 bg-gray-50"
+              >
+                <div className="flex items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <span className="text-lg font-bold text-green-700">{getRankSuffix(index + 1)}</span>
+                    <span className="font-semibold text-gray-800">{entry.unique_name}</span>
+                  </div>
+                  <span className="text-xs text-gray-400">{formatDate(entry.created_at)}</span>
+                </div>
+                <div className="flex flex-wrap gap-4 mt-2">
+                  <div className="flex flex-col items-center flex-1 min-w-[120px]">
+                    <span className="text-xl font-bold text-blue-700">{entry.total_co2_lifetime} t</span>
+                    <span className="text-xs text-gray-500">Lifetime CO₂</span>
+                  </div>
+                  <div className="flex flex-col items-center flex-1 min-w-[120px]">
+                    <span className={`text-xl font-bold ${entry.percent_above_average > 0 ? 'text-red-700' : 'text-green-700'}`}>
+                      {entry.percent_above_average > 0 ? '+' : ''}
+                      {entry.percent_above_average}%
                     </span>
-                    <h3 style={styles.userName}>
-                      {entry.unique_name}
-                    </h3>
-                  </div>
-                  <span style={styles.entryDate}>
-                    {formatDate(entry.created_at)}
-                  </span>
-                </div>
-
-                <div style={styles.statsGrid}>
-                  <div style={{
-                    ...styles.statCard,
-                    backgroundColor: '#dbeafe',
-                    color: '#1e40af'
-                  }}>
-                    <div style={styles.statValue}>
-                      {entry.total_co2_lifetime} tonnes
-                    </div>
-                    <div style={styles.statLabel}>
-                      Lifetime CO₂ Footprint
-                    </div>
-                  </div>
-
-                  <div style={{
-                    ...styles.statCard,
-                    backgroundColor: entry.percent_above_average > 0 ? '#fee2e2' : '#dcfce7',
-                    color: entry.percent_above_average > 0 ? '#dc2626' : '#16a34a'
-                  }}>
-                    <div style={styles.statValue}>
-                      {entry.percent_above_average > 0 ? '+' : ''}{entry.percent_above_average}%
-                    </div>
-                    <div style={styles.statLabel}>
-                      vs Global Average
-                    </div>
+                    <span className="text-xs text-gray-500">vs Global Avg</span>
                   </div>
                 </div>
-
-                <div style={{ marginBottom: '20px' }}>
-                  <h4 style={styles.sectionTitle}>🎯 Top Contributors</h4>
-                  <div style={styles.contributorsList}>
+                <div>
+                  <span className="block text-xs text-gray-500 mb-1">Top Contributors:</span>
+                  <div className="flex flex-wrap gap-2">
                     {entry.top_contributors.map((contributor, idx) => (
-                      <span key={idx} style={styles.contributorBadge}>
+                      <span
+                        key={idx}
+                        className="bg-orange-100 text-orange-700 px-2 py-1 rounded-full text-xs font-medium"
+                      >
                         #{idx + 1} {contributor}
                       </span>
                     ))}
                   </div>
                 </div>
-
                 <div>
-                  <h4 style={styles.sectionTitle}>💡 AI Recommendations</h4>
-                  <ul style={styles.recommendationsList}>
-                    {entry.recommendations.map((recommendation, idx) => (
-                      <li key={idx} style={styles.recommendationItem}>
-                        {recommendation}
-                      </li>
+                  <span className="block text-xs text-gray-500 mb-1">AI Recommendations:</span>
+                  <ul className="list-disc ml-5 text-sm text-gray-700">
+                    {entry.recommendations.map((rec, idx) => (
+                      <li key={idx}>{rec}</li>
                     ))}
                   </ul>
                 </div>
               </div>
             ))}
-
-            <div style={{ textAlign: 'center', marginTop: '30px' }}>
-              <Link href="/quiz" style={styles.takeQuizButton}>
-                Join the Leaderboard 🌱
+            <div className="text-center mt-6">
+              <Link
+                href="/quiz"
+                className="inline-block px-6 py-2 bg-green-700 text-white rounded font-medium hover:bg-green-600 transition-colors"
+              >
+                Press to do the quiz yourself
               </Link>
             </div>
           </div>
         )}
-      </main>
+      </div>
     </div>
   );
 }
