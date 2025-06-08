@@ -59,7 +59,17 @@ const AboutPage = () => {
                 Google’s Teachable Machine
               </Link>
               . This amazing tool allows for the creation of custom image
-              classification models quickly and easily.
+              classification models quickly and easily. The model was trained
+              using the{" "}
+              <Link
+                href="https://github.com/garythung/trashnet"
+                target="_blank"
+                rel="noopener noreferrer"
+                className="text-emerald-green hover:text-forest-green underline"
+              >
+                TrashNet dataset
+              </Link>
+              .
             </p>
           </section>
 
