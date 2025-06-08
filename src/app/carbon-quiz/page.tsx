@@ -2,7 +2,7 @@
 
 import React, { useState } from "react";
 import "../globals.css"; // GLOBAL STYLES
-import "./carbon-quiz.css";
+
 import { createClient } from "@supabase/supabase-js"; //Directly connect to Supabase database
 
 //Initialize Supabase client, connects to the .env.local\
