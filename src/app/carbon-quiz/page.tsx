@@ -1,5 +1,15 @@
 "use client";
 
+//Styling for this page.
+// All titles / important
+  // Font bold / semi-bold dependent on importance
+  // Color is text-green-700 always
+  // Green underline on links
+// For all text
+  // Black
+  // Font bold for importance
+
+
 import React, { useState } from "react";
 import "./carbon-quiz.css";
 
@@ -9,7 +19,7 @@ const infoSection = {
   fields: [],
   info: (
     <div className="space-y-4">
-      {/* Globe image with emissions overlay */}
+      {/* Apollo Wikipedia Earth Image */}
       <div className="flex justify-center mb-4">
         <img
           src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/480px-The_Earth_seen_from_Apollo_17.jpg"
@@ -23,17 +33,17 @@ const infoSection = {
         Your answers are anonymous and used only for this analysis.
       </p>
       <p>
-        <strong>Sources / Assumptions:</strong>
+        <strong>Sources / Assumptions:</strong> {/*Moved the paragraph out of list due to syntax error with HTML*/}
+      </p>
         <ul className="list-disc ml-6">
-          <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
+          <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-green-700 font-semibold underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
           <li>The average human emits 4.8 tonnes per year. </li>
           <li>IEA’s mid-range figure predicts the average human emitting 300 tonnes in a lifetime.</li>
           <li>The Gemini 2.0 Flash API model will process all data and conduct calculations.</li>
           <li>The image of the Earth (above) is credit to Wikipedia, ans is the Earth seen from Apollo</li>
         </ul>
-      </p>
       <p>
-        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI, we cannot guarantee 100% accuracy.
+        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span>
       </p>
       <p>
         <strong>Privacy:</strong> The data you send is not seen by anyone on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
@@ -123,7 +133,7 @@ const questions = [
       }
     ]
   },
-  {
+  { //Section 2 gathers information about the housing and energy use
     section: "Home & Energy",
     fields: [
       {
