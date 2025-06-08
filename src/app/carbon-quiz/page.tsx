@@ -8,6 +8,9 @@
 // For all text
   // Black
   // Font bold for importance
+// For all buttons
+  // When unselected: bg-green-700
+  // When hovered: bg-green-500
 
 
 import React, { useState } from "react";
@@ -37,20 +40,20 @@ const infoSection = {
       </p>
         <ul className="list-disc ml-6">
           <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-green-700 font-semibold underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
-          <li>The average human emits 4.8 tonnes per year. </li>
-          <li>IEA’s mid-range figure predicts the average human emitting 300 tonnes in a lifetime.</li>
+          <li>The average human emits <span className="font-semibold text-green-700">4.8 tonnes</span> per year. </li>
+          <li>IEA’s mid-range figure predicts the average human emitting <span className="font-semibold text-green-700">300 tonnes</span> in a lifetime.</li>
           <li>The Gemini 2.0 Flash API model will process all data and conduct calculations.</li>
           <li>The image of the Earth (above) is credit to Wikipedia, ans is the Earth seen from Apollo</li>
         </ul>
       <p>
-        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span>
+        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI limitations, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span>
       </p>
       <p>
-        <strong>Privacy:</strong> The data you send is not seen by anyone on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
+        <strong>Privacy:</strong> The data you send is <span className="font-semibold text-green-700">not seen by anyone</span> on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
       </p>
-      <p><strong>Technical Details:</strong> Data from the form is sent via JSON to Gemini Flash 2.0 AI model.</p>
+      <p><strong>Technical Details:</strong> Data from the form is sent via JSON format to Gemini Flash 2.0 AI model.</p>
       <button
-        className="mt-6 px-6 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors"
+        className="mt-6 px-6 py-2 bg-green-700 text-white rounded-md font-medium hover:bg-green-500 transition-colors"
         onClick={() => window.dispatchEvent(new CustomEvent("start-quiz"))}
       >
         Start The Quiz -→
