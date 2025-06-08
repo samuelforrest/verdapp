@@ -3,6 +3,7 @@
 import { useState } from 'react';
 import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -11,18 +12,11 @@ export default function Login() {
   const router = useRouter();
 
   const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({
-      email,
-      password,
-    });
-    if (error) {
-      setErrorMsg(error.message);
-    } else {
-      router.push('/dashboard');
-    }
+    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
+    if (error) setErrorMsg(error.message);
+    else router.push('/dashboard');
   };
 
-  // Styling objects
   const styles = {
     container: {
       display: 'flex',
@@ -59,9 +53,7 @@ export default function Login() {
       outline: 'none',
       transition: 'border-color 0.3s ease',
     },
-    inputFocus: {
-      borderColor: '#2ab985',
-    },
+    inputFocus: { borderColor: '#2ab985' },
     button: {
       width: '100%',
       padding: '12px 15px',
@@ -74,18 +66,22 @@ export default function Login() {
       cursor: 'pointer',
       transition: 'background-color 0.3s ease',
     },
-    buttonHover: {
-      backgroundColor: '#2ab985',
-    },
+    buttonHover: { backgroundColor: '#259c74' },
     error: {
       color: '#e63946',
       marginTop: '10px',
       fontWeight: '600',
       textAlign: 'center' as const,
     },
+    link: {
+      marginTop: '16px',
+      fontSize: '0.9rem',
+      textAlign: 'center' as const,
+      color: '#2ab985',
+      textDecoration: 'none',
+    },
   };
 
-  // State for hover effect on button
   const [hover, setHover] = useState(false);
 
   return (
@@ -121,6 +117,7 @@ export default function Login() {
           Log In
         </button>
         {errorMsg && <p style={styles.error}>{errorMsg}</p>}
+        <Link href="/signup" style={styles.link}>Don’t have an account? Sign up here</Link>
       </form>
     </div>
   );
