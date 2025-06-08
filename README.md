@@ -1,5 +1,7 @@
 # Verda
 
+A very fun 2-day project at the KTHack25
+
 ## Link to our website
 
 - [Visit the Official Website](https://www.verdapp.xyz)
