@@ -276,8 +276,9 @@ export default function LeaderboardPage() {
     return (
       <div style={styles.container}>
         <div style={styles.loading}>
-          <div style={{ marginBottom: '20px' }}>🔄</div>
-          Loading carbon footprint leaderboard...
+          
+          The carbon footprint leaderboard is loading...
+          
         </div>
       </div>
     );
