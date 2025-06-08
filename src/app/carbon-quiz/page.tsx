@@ -16,9 +16,15 @@
 
 // do change it tho, thats just the current setup
 
-
 import React, { useState } from "react";
 import "./carbon-quiz.css";
+import { createClient } from "@supabase/supabase-js";
+
+// Initialize Supabase client
+const supabase = createClient(
+  process.env.NEXT_PUBLIC_SUPABASE_URL!,
+  process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+);
 
 // This is section 0, which is information to the user before starting the quiz.
 const infoSection = {
@@ -34,10 +40,10 @@ const infoSection = {
           className="rounded-full w-40 h-40 object-cover"
         />
       </div>
-      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator NEEDS STYLING TO HEX VALUE OF LOGO</h2>
+      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator</h2>
       <p>
         This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
-        Your answers are anonymous and used only for this analysis.
+        Your answers are anonymous and used only for this analysis. You can optionally save your results to our public leaderboard!
       </p>
       <p>
         <strong>Sources / Assumptions:</strong> {/*Moved the paragraph out of list due to syntax error with HTML*/}
@@ -45,9 +51,9 @@ const infoSection = {
         <ul className="list-disc ml-6">
           <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-green-700 font-semibold underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
           <li>The average human emits <span className="font-semibold text-green-700">4.8 tonnes</span> per year. </li>
-          <li>IEA’s mid-range figure predicts the average human emitting <span className="font-semibold text-green-700">300 tonnes</span> in a lifetime.</li>
+          <li>IEA's mid-range figure predicts the average human emitting <span className="font-semibold text-green-700">300 tonnes</span> in a lifetime.</li>
           <li>The Gemini 2.0 Flash API model will process all data and conduct calculations.</li>
-          <li>The image of the Earth (above) is credit to Wikipedia, ans is the Earth seen from Apollo</li>
+          <li>The image of the Earth (above) is credit to Wikipedia, and is the Earth seen from Apollo</li>
         </ul>
       <p>
         <strong>Note:</strong> This is an demonstrational educational tool, and due to AI limitations, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span> AI Latency can vary. Allow at least 20 seconds before trying again.
@@ -386,23 +392,23 @@ type AnalysisResult = {
 export default function OnboardingForm() {
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
-
   const [formData, setFormData] = useState<FormState>({});
-
   const [submitted, setSubmitted] = useState(false); // User answer stored
-
   const [errors, setErrors] = useState<string[]>([]); //If the user skips req fields, missing ones are outputted by label.
-
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
-
   const [loading, setLoading] = useState(false);
-
   const [apiError, setApiError] = useState<string | null>(null);
+  
+  // New state for leaderboard functionality
+  const [showSaveOption, setShowSaveOption] = useState(false);
+  const [uniqueName, setUniqueName] = useState("");
+  const [saveLoading, setSaveLoading] = useState(false);
+  const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveSuccess, setSaveSuccess] = useState(false);
 
   const section = questions[currentSectionIndex];
 
   // Waits for start quiz button to be pressed
-
   React.useEffect(() => {
     const handler = () => setCurrentSectionIndex(1);
     window.addEventListener("start-quiz", handler);
@@ -410,7 +416,6 @@ export default function OnboardingForm() {
   }, []);
 
   // Updates the form data whenever somebody selects an answer / types in the input box.
-
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -439,7 +444,6 @@ export default function OnboardingForm() {
   };
 
   // Sends the form answers to the server, /api/gemini (route.ts)
-
   async function analyzeCarbonUsage(data: FormState) {
     setLoading(true);
     setAnalysisResult(null);
@@ -458,11 +462,8 @@ export default function OnboardingForm() {
 
       if (!response.ok) {
         const errorText = await response.text();
-
         setApiError(`API error: ${response.status} ${response.statusText} - ${errorText}`);
-
         setLoading(false);
-
         return;
       }
 
@@ -471,10 +472,9 @@ export default function OnboardingForm() {
 
       if (result.analysis) {
         setAnalysisResult(result.analysis);
-      } 
-      
-      else {
-        setApiError("No analysis data returned from Gemini API."); // Eror message
+        setShowSaveOption(true); // Show save option after successful analysis
+      } else {
+        setApiError("No analysis data returned from Gemini API."); // Error message
       }
 
     } catch (error) {
@@ -484,6 +484,43 @@ export default function OnboardingForm() {
       setLoading(false);
     }
   }
+
+  // Save result to leaderboard (direct to Supabase)
+  const handleSaveToLeaderboard = async () => {
+    if (!uniqueName.trim() || !analysisResult) {
+      setSaveError("Please enter a unique name.");
+      return;
+    }
+
+    setSaveLoading(true);
+    setSaveError(null);
+
+    try {
+      const { error } = await supabase
+        .from("carbon_leaderboard")
+        .insert([
+          {
+            unique_name: uniqueName.trim(),
+            total_co2_lifetime: analysisResult.totalCO2Lifetime,
+            percent_above_average: analysisResult.percentAboveAverage,
+            top_contributors: analysisResult.topContributors,
+            recommendations: analysisResult.recommendations,
+          },
+        ]);
+
+      if (error) {
+        throw new Error(error.message);
+      }
+
+      setSaveSuccess(true);
+      setShowSaveOption(false);
+    } catch (error) {
+      console.error("Error saving to leaderboard:", error);
+      setSaveError((error as Error).message);
+    } finally {
+      setSaveLoading(false);
+    }
+  };
 
   // When the user presses the final submit button, the answer is sent to Gemini API
   const handleSubmit = async () => {
@@ -496,18 +533,16 @@ export default function OnboardingForm() {
   // Add resets, back to beginning
   const handleReset = () => {
     setFormData({});
-
     setCurrentSectionIndex(0); // Back to section 0(info)
-
     setErrors([]);
-
     setSubmitted(false);
-
     setAnalysisResult(null);
-
     setApiError(null); //API errors must be null, even if previous submission was faulty.
+    setShowSaveOption(false);
+    setUniqueName("");
+    setSaveError(null);
+    setSaveSuccess(false);
   };
-
 
   if (submitted) {
     return (
@@ -543,23 +578,19 @@ export default function OnboardingForm() {
                   ? 'bg-red-50 border-red-200' 
                   : 'bg-green-50 border-green-200'
               }`}>
-
                 <h3 className={`text-lg font-semibold mb-2 ${
                   analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-800'
                 }`}>
                   📊 Comparison to Global Average
                 </h3>
-
                 <p className={`text-3xl font-bold ${
                   analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-600'
                 }`}>
                   {analysisResult.percentAboveAverage > 0 ? '+' : ''}{analysisResult.percentAboveAverage}%
                 </p>
-
                 <p className="text-sm text-gray-600 mt-1">
-                  {analysisResult.percentAboveAverage > 0 ? 'Above' : 'Below'} global average {/*Decides whether to print above or below*/}
+                  {analysisResult.percentAboveAverage > 0 ? 'Above' : 'Below'} global average
                 </p>
-
               </div>
             </div>
 
@@ -572,7 +603,6 @@ export default function OnboardingForm() {
                     <span className="bg-orange-200 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                       #{index + 1}
                     </span>
-
                     <span className="text-gray-700">
                       {contributor}
                     </span>
@@ -595,20 +625,62 @@ export default function OnboardingForm() {
                 ))}
               </div>
             </div>
+
+            {/* Save to Leaderboard Section */}
+            {showSaveOption && !saveSuccess && (
+              <div className="bg-purple-50 p-6 rounded-lg border border-purple-200">
+                <h3 className="text-lg font-semibold text-purple-700 mb-4">🏆 Save to Public Leaderboard</h3>
+                <p className="text-gray-700 mb-4">
+                  Want to see how you compare with others? Save your results to our public leaderboard!
+                </p>
+                <div className="flex gap-3 items-end">
+                  <div className="flex-1">
+                    <label className="block text-sm font-medium text-gray-700 mb-2">
+                      Choose a unique name (public):
+                    </label>
+                    <input
+                      type="text"
+                      value={uniqueName}
+                      onChange={(e) => setUniqueName(e.target.value)}
+                      placeholder="e.g., EcoWarrior2024"
+                      className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-purple-500 focus:border-transparent"
+                      maxLength={50}
+                    />
+                  </div>
+                  <button
+                    onClick={handleSaveToLeaderboard}
+                    disabled={saveLoading || !uniqueName.trim()}
+                    className="px-6 py-2 bg-purple-600 text-white rounded-md font-medium hover:bg-purple-700 transition-colors disabled:bg-gray-400 disabled:cursor-not-allowed"
+                  >
+                    {saveLoading ? "Saving..." : "Save to Leaderboard"}
+                  </button>
+                </div>
+                {saveError && (
+                  <p className="text-red-600 text-sm mt-2">❌ {saveError}</p>
+                )}
+              </div>
+            )}
+
+            {/* Success message */}
+            {saveSuccess && (
+              <div className="bg-green-100 border border-green-400 text-green-700 px-4 py-3 rounded">
+                <p className="font-semibold">🎉 Success! Your results have been saved to the leaderboard.</p>
+                <a href="/leaderboard" className="text-green-600 hover:text-green-800 underline">
+                  View the leaderboard →
+                </a>
+              </div>
+            )}
           </div>
         )}
 
         {/* Form Data Summary in JSON with collapsable */}
         <details className="mt-8 bg-gray-50 p-4 rounded-lg">
-
           <summary className="font-medium text-gray-700 mb-2">
             🤓 View Your Submitted Data (JSON format)
           </summary>
-
           <pre className="bg-white p-4 rounded border text-xs overflow-auto max-h-64">
             {JSON.stringify(formData, null, 2)}
           </pre>
-
         </details>
 
         <div className="flex gap-4 mt-6">
@@ -618,6 +690,12 @@ export default function OnboardingForm() {
           >
             🔄 Take the Quiz Again
           </button>
+          <a
+            href="/leaderboard"
+            className="px-6 py-2 bg-green-600 text-white rounded hover:bg-green-700 transition-colors text-decoration-none"
+          >
+            🏆 View Leaderboard
+          </a>
         </div>
       </div>
     );
