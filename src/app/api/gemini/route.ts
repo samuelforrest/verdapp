@@ -36,8 +36,8 @@ Required JSON format:
 }
 
 Guidelines for analysis:
-- Calculate total lifetime CO2 assuming 80-year life expectancy
-- Compare to global average of ~4-5 tonnes CO2 per person per year
+- Calculate total lifetime CO2, working out their life expectancy from their region / country.
+- Compare to global average of 4.8 tons per person in the world (according to worldometer)
 - Top contributors should be the 2 biggest sources of carbon emissions from their lifestyle
 - Recommendations should be specific, actionable steps they can take
 - Base calculations on realistic emission factors for transportation, energy, food, etc.

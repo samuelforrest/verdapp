@@ -3,8 +3,45 @@
 import React, { useState } from "react";
 import "./carbon-quiz.css";
 
-// Updated questions structure - using the CORRECT questions from second file but adapted for form format
+// Add an info section as section 0
+const infoSection = {
+  section: "Welcome to the Carbon Footprint Quiz",
+  fields: [],
+  info: (
+    <div className="space-y-4">
+      <h2 className="text-2xl font-bold text-green-700">🌱 Carbon Footprint Quiz</h2>
+      <p>
+        This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
+        Your answers are anonymous and used only for this analysis.
+      </p>
+      <p>
+        <strong>Sources / Assumptions</strong>
+        <ul className="list-disc ml-6">
+          <li>Worldometer's CO2 Average Emissions per Capita <a href="https://www.worldometers.info/co2-emissions/co2-emissions-per-capita/" className="text-blue-600 underline" target="_blank" rel="noopener noreferrer">CO₂ Emissions Data</a></li>
+          <li>The average human emits 4.8 tonnes per year. </li>
+          <li>IEA’s mid-range figure predicts the average human emitting 300 tonnes in a lifetime.</li>
+          <li>The Gemini 2.0 Flash API model will process all data and conduct calculations.</li>
+        </ul>
+      </p>
+      <p>
+        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI, we cannot guarantee 100% accuracy.
+      </p>
+      <p>
+        <strong>Privacy:</strong> The data you send is not seen by anyone on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
+      </p>
+      <p><strong>Technical Details: </strong>Data from the form is sent via JSON to Gemini Flash 2.0 AI model.</p>
+      <button
+        className="mt-6 px-6 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors"
+        onClick={() => window.dispatchEvent(new CustomEvent("start-quiz"))}
+      >
+        Start Quiz →
+      </button>
+    </div>
+  ),
+};
+
 const questions = [
+  infoSection,
   {
     section: "Personal Details (* denotes required)",
     fields: [
@@ -343,6 +380,13 @@ export default function OnboardingForm() {
 
   const section = questions[currentSectionIndex];
 
+  // Listen for "start-quiz" event to move from info slide to first real section
+  React.useEffect(() => {
+    const handler = () => setCurrentSectionIndex(1);
+    window.addEventListener("start-quiz", handler);
+    return () => window.removeEventListener("start-quiz", handler);
+  }, []);
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
     setFormData((prev) => ({ ...prev, [name]: value }));
@@ -530,18 +574,27 @@ export default function OnboardingForm() {
     );
   }
 
+  // Render info slide if section 0
+  if (currentSectionIndex === 0) {
+    return (
+      <div className="max-w-2xl mx-auto p-8 bg-white rounded shadow mt-10">
+        {infoSection.info}
+      </div>
+    );
+  }
+
   return (
     <div className="max-w-2xl mx-auto p-6 bg-white rounded shadow">
       {/* Progress Bar */}
       <div className="mb-6">
         <div className="flex justify-between text-sm text-gray-600 mb-2">
-          <span>Section {currentSectionIndex + 1} of {questions.length}</span>
-          <span>{Math.round(((currentSectionIndex + 1) / questions.length) * 100)}% Complete</span>
+          <span>Section {currentSectionIndex} of {questions.length - 1}</span>
+          <span>{Math.round((currentSectionIndex / (questions.length - 1)) * 100)}% Complete</span>
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
             className="bg-blue-500 h-2 rounded-full transition-all duration-300"
-            style={{ width: `${((currentSectionIndex + 1) / questions.length) * 100}%` }}
+            style={{ width: `${(currentSectionIndex / (questions.length - 1)) * 100}%` }}
           ></div>
         </div>
       </div>
@@ -602,9 +655,9 @@ export default function OnboardingForm() {
       <div className="flex justify-between items-center mt-8 pt-6 border-t border-gray-200">
         <button
           onClick={handlePrevious}
-          disabled={currentSectionIndex === 0}
+          disabled={currentSectionIndex === 1}
           className={`px-6 py-2 rounded-md font-medium transition-colors ${
-            currentSectionIndex === 0 
+            currentSectionIndex === 1 
               ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
               : "bg-gray-500 text-white hover:bg-gray-600"
           }`}
