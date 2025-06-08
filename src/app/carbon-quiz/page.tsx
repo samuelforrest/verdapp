@@ -1,6 +1,6 @@
 "use client";
 
-//Styling for this page.
+//Styling for this page, and recommended for the History and About pages. Samuel.
 // All titles / important
   // Font bold / semi-bold dependent on importance
   // Color is text-green-700 always
@@ -13,14 +13,14 @@
   // When hovered: bg-green-500
 // Colors
   // All blue is bg-600 or text-blue-600, no contrast
-
 // do change it tho, thats just the current setup
 
 import React, { useState } from "react";
 import "./carbon-quiz.css";
-import { createClient } from "@supabase/supabase-js";
+import { createClient } from "@supabase/supabase-js"; //Directly connect to Supabase database
 
-// Initialize Supabase client
+//Initialize Supabase client, connects to the .env.local\
+//.env.local file required
 const supabase = createClient(
   process.env.NEXT_PUBLIC_SUPABASE_URL!,
   process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -40,7 +40,7 @@ const infoSection = {
           className="rounded-full w-40 h-40 object-cover"
         />
       </div>
-      <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator</h2>
+      <h2 className="text-2xl font-bold text-green-700">🌱🔄 Lifetime CO2 Emissions Calculator</h2>
       <p>
         This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
         Your answers are anonymous and used only for this analysis. You can optionally save your results to our public leaderboard!

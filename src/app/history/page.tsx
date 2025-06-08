@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
+import { createClient } from '@supabase/supabase-js'; //Directly connect to supabase
 
 interface LeaderboardEntry {
   id: string;
