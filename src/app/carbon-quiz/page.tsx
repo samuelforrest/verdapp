@@ -9,6 +9,14 @@ const infoSection = {
   fields: [],
   info: (
     <div className="space-y-4">
+      {/* Globe image with emissions overlay */}
+      <div className="flex justify-center mb-4">
+        <img
+          src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/480px-The_Earth_seen_from_Apollo_17.jpg"
+          alt="the Earth seen from Apollo"
+          className="rounded-full w-40 h-40 object-cover"
+        />
+      </div>
       <h2 className="text-2xl font-bold text-green-700">🌱 Lifetime CO2 Emissions Calculator</h2>
       <p>
         This quiz estimates your lifetime carbon footprint based on your lifestyle, home, travel, food, and purchases.
@@ -21,6 +29,7 @@ const infoSection = {
           <li>The average human emits 4.8 tonnes per year. </li>
           <li>IEA’s mid-range figure predicts the average human emitting 300 tonnes in a lifetime.</li>
           <li>The Gemini 2.0 Flash API model will process all data and conduct calculations.</li>
+          <li>The image of the Earth (above) is credit to Wikipedia, ans is the Earth seen from Apollo</li>
         </ul>
       </p>
       <p>
