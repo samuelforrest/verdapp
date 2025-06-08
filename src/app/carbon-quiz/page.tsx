@@ -11,6 +11,8 @@
 // For all buttons
   // When unselected: bg-green-700
   // When hovered: bg-green-500
+// Colors
+  // All blue is bg-600 or text-blue-600, no contrast
 
 
 import React, { useState } from "react";
@@ -263,7 +265,7 @@ const questions = [
   },
   { // This section is about the user's diet and food waste
     section: "Food",
-    
+
     fields: [
       {
         name: "diet_type",
@@ -316,13 +318,13 @@ const questions = [
       }
     ]
   },
-  {
+  { // This section is about pets, and other investments or purchases
     section: "Purchases & Other",
     fields: [
       {
         name: "pets_number_and_type",
         label: "Describe the pets you have",
-        type: "text",
+        type: "text", //needs to be a text input - many people have multiple or wierd pets
         required: false,
       },
       {
@@ -370,31 +372,42 @@ type FormState = {
   [key: string]: string;
 };
 
-// Define the analysis result type based on your API response
+// defined the results needed from the Gemini API
 type AnalysisResult = {
-  totalCO2Lifetime: number;
-  percentAboveAverage: number;
-  topContributors: [string, string];
-  recommendations: [string, string, string];
+  totalCO2Lifetime: number; //Total in tonnes of Co2
+  percentAboveAverage: number; //A percentage above the average human
+  topContributors: [string, string]; //2 top contributers to this percent
+  recommendations: [string, string, string]; //3 Ai recommendations made to the user for reduction
 };
 
+// THE FOLLOWING SECTION USED GEMINI TO HELP EXPLAIN HOW TO COMMUNICATE PROPERLY WITH THE GOOGLE GEN AI, and communicate to route.ts
 export default function OnboardingForm() {
+
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
+
   const [formData, setFormData] = useState<FormState>({});
-  const [submitted, setSubmitted] = useState(false);
-  const [errors, setErrors] = useState<string[]>([]);
+
+  const [submitted, setSubmitted] = useState(false); // User answer stored
+
+  const [errors, setErrors] = useState<string[]>([]); //If the user skips req fields, missing ones are outputted by label.
+
   const [analysisResult, setAnalysisResult] = useState<AnalysisResult | null>(null);
+
   const [loading, setLoading] = useState(false);
+
   const [apiError, setApiError] = useState<string | null>(null);
 
   const section = questions[currentSectionIndex];
 
-  // Listen for "start-quiz" event to move from info slide to first real section
+  // Waits for start quiz button to be pressed
+
   React.useEffect(() => {
     const handler = () => setCurrentSectionIndex(1);
     window.addEventListener("start-quiz", handler);
     return () => window.removeEventListener("start-quiz", handler);
   }, []);
+
+  // Updates the form data whenever somebody selects an answer / types in the input box.
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -407,13 +420,13 @@ export default function OnboardingForm() {
       .filter((field) => !formData[field.name]?.trim())
       .map((field) => field.label);
 
-    setErrors(missing);
+    setErrors(missing); //Stores in missing errors
     return missing.length === 0;
   };
 
   const handleNext = () => {
-    if (validateSection()) {
-      setCurrentSectionIndex((prev) => prev + 1);
+    if (validateSection()) { // Only if no erros
+      setCurrentSectionIndex((prev) => prev + 1); // Move to page + 1 in the index order
       setErrors([]);
     }
   };
@@ -423,7 +436,8 @@ export default function OnboardingForm() {
     setErrors([]);
   };
 
-  // Call your own backend API, which calls Gemini securely with your API key
+  // Sends the form answers to the server, /api/gemini (route.ts)
+
   async function analyzeCarbonUsage(data: FormState) {
     setLoading(true);
     setAnalysisResult(null);
@@ -433,7 +447,7 @@ export default function OnboardingForm() {
       const response = await fetch("/api/gemini", {
         method: "POST",
         headers: {
-          "Content-Type": "application/json",
+          "Content-Type": "application/json", // Sending via JSON
         },
         body: JSON.stringify({ formData: data }),
       });
@@ -442,8 +456,11 @@ export default function OnboardingForm() {
 
       if (!response.ok) {
         const errorText = await response.text();
+
         setApiError(`API error: ${response.status} ${response.statusText} - ${errorText}`);
+
         setLoading(false);
+
         return;
       }
 
@@ -452,9 +469,12 @@ export default function OnboardingForm() {
 
       if (result.analysis) {
         setAnalysisResult(result.analysis);
-      } else {
-        setApiError("No analysis data returned from Gemini API.");
+      } 
+      
+      else {
+        setApiError("No analysis data returned from Gemini API."); // Eror message
       }
+
     } catch (error) {
       console.error("Error during API call:", error);
       setApiError("Error contacting Gemini API: " + (error as Error).message);
@@ -463,6 +483,7 @@ export default function OnboardingForm() {
     }
   }
 
+  // When the user presses the final submit button, the answer is sent to Gemini API
   const handleSubmit = async () => {
     if (validateSection()) {
       setSubmitted(true);
@@ -470,13 +491,19 @@ export default function OnboardingForm() {
     }
   };
 
+  // Add resets, back to beginning
   const handleReset = () => {
     setFormData({});
-    setCurrentSectionIndex(0);
+
+    setCurrentSectionIndex(0); // Back to section 0(info)
+
     setErrors([]);
+
     setSubmitted(false);
+
     setAnalysisResult(null);
-    setApiError(null);
+
+    setApiError(null); //API errors must be null, even if previous submission was faulty.
   };
 
   if (submitted) {
@@ -503,9 +530,9 @@ export default function OnboardingForm() {
             {/* Main Stats */}
             <div className="grid md:grid-cols-2 gap-6">
               <div className="bg-blue-50 p-6 rounded-lg border border-blue-200">
-                <h3 className="text-lg font-semibold text-blue-800 mb-2">🌍 Lifetime CO₂ Footprint</h3>
+                <h3 className="text-lg font-semibold text-blue-600 mb-2">🌍 Lifetime CO₂ Footprint</h3>
                 <p className="text-3xl font-bold text-blue-600">{analysisResult.totalCO2Lifetime} tonnes</p>
-                <p className="text-sm text-gray-600 mt-1">Based on 80-year lifespan estimate</p>
+                <p className="text-sm text-gray-600 mt-1">Based on your predicted lifespan on the data given.</p>
               </div>
               
               <div className={`p-6 rounded-lg border ${
@@ -514,24 +541,24 @@ export default function OnboardingForm() {
                   : 'bg-green-50 border-green-200'
               }`}>
                 <h3 className={`text-lg font-semibold mb-2 ${
-                  analysisResult.percentAboveAverage > 0 ? 'text-red-800' : 'text-green-800'
+                  analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-800'
                 }`}>
-                  📊 Compared to Global Average
+                  📊 Comparison to Global Average
                 </h3>
                 <p className={`text-3xl font-bold ${
-                  analysisResult.percentAboveAverage > 0 ? 'text-red-600' : 'text-green-600'
+                  analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-600'
                 }`}>
                   {analysisResult.percentAboveAverage > 0 ? '+' : ''}{analysisResult.percentAboveAverage}%
                 </p>
                 <p className="text-sm text-gray-600 mt-1">
-                  {analysisResult.percentAboveAverage > 0 ? 'Above' : 'Below'} global average
+                  {analysisResult.percentAboveAverage > 0 ? 'Above' : 'Below'} global average {/*Decides whether to print above or below*/}
                 </p>
               </div>
             </div>
 
             {/* Top Contributors */}
             <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4">🔥 Your Top Carbon Contributors</h3>
+              <h3 className="text-lg font-semibold text-orange-800 mb-4">Your Top 2 Carbon Contributors</h3>
               <div className="space-y-2">
                 {analysisResult.topContributors.map((contributor, index) => (
                   <div key={index} className="flex items-center space-x-3">
@@ -546,7 +573,7 @@ export default function OnboardingForm() {
 
             {/* Recommendations */}
             <div className="bg-green-50 p-6 rounded-lg border border-green-200">
-              <h3 className="text-lg font-semibold text-green-800 mb-4">💡 Personalized AI Recommendations</h3>
+              <h3 className="text-lg font-semibold text-green-800 mb-4">3 Personalized AI Recommendations</h3>
               <div className="space-y-3">
                 {analysisResult.recommendations.map((recommendation, index) => (
                   <div key={index} className="flex items-start space-x-3">
@@ -564,7 +591,7 @@ export default function OnboardingForm() {
         {/* Form Data Summary (Collapsible) */}
         <details className="mt-8 bg-gray-50 p-4 rounded-lg">
           <summary className="cursor-pointer font-medium text-gray-700 mb-2">
-            📋 View Your Submitted Data
+            🤓 View Your Submitted Data (JSON format)
           </summary>
           <pre className="bg-white p-4 rounded border text-xs overflow-auto max-h-64">
             {JSON.stringify(formData, null, 2)}
