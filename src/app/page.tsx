@@ -1,318 +1,443 @@
 "use client";
 
-import { useState, useCallback } from "react";
+import { useState, useEffect, useCallback } from "react";
 import TeachableMachineClient from "../components/TeachableMachineClient";
 
-// Defines the structure for information about a single waste bin.
-interface BinInfo {
-  name: string; // The display name for the bin, e.g., "Recycling", "General Waste".
-  color: string; // Tailwind CSS class for the bin's background color, e.g., 'bg-blue-500'.
-  textColor?: string; // Optional Tailwind CSS class for text color, for contrast against bin color.
-  description: string; // A brief description of what items belong in this bin.
-  items: string[]; // A list of example items that go into this bin.
+// Defines the structure for a single waste bin.
+interface Bin {
+  name: string;
+  color: string; // Tailwind CSS class for background
+  items: string[];
+  instructions?: string;
+  notes?: string;
+  textColor?: string; // Optional Tailwind CSS class for text
+  description?: string; // Description of what goes in the bin
 }
 
 // Defines the structure for a country's complete waste bin system information.
 interface CountryBinInfo {
-  countryName: string; // The full name of the country.
-  bins: BinInfo[]; // An array of BinInfo objects detailing each type of bin used in the country.
-  notes?: string; // Optional field for general notes or important considerations about the country's waste system.
+  countryName: string;
+  bins: Bin[]; // Uses the Bin interface
+  generalAdvice?: string[];
+  source?: string;
+  notes?: string; // Country-specific general notes
 }
 
-// Data store for country-specific waste bin information.
-// This object holds waste management details for various countries, keyed by their two-letter country code (e.g., "DE" for Germany).
-const countrySpecificBinInfo: Record<string, CountryBinInfo> = {
-  // Germany: Detailed multi-stream recycling with mandatory sorting.
+// Defines the overall structure for country-specific bin information, keyed by country code.
+interface CountrySpecificBinInfo {
+  [countryCode: string]: CountryBinInfo;
+}
+
+// Type for the information displayed about a bin, including dynamic advice.
+interface DisplayableBinInfo extends Bin {
+  // Extends the Bin interface
+  advice?: string;
+}
+
+const countrySpecificBinInfo: CountrySpecificBinInfo = {
   DE: {
     countryName: "Germany",
     bins: [
       {
-        name: "Restmüll (General Waste)",
+        name: "Restmüll (Grey/Black Bin)",
         color: "bg-gray-700",
         textColor: "text-white",
-        description: "General non-recyclable, non-compostable household waste.",
-        items: ["Non-recyclable household items", "Ashes", "Nappies"],
+        description: "General non-recyclable waste.",
+        items: ["Ash", "Nappies", "Hygiene products", "Vacuum cleaner bags"],
       },
       {
-        name: "Gelber Sack/Tonne (Packaging)",
+        name: "Gelbe Tonne/Sack (Yellow Bin/Bag)",
         color: "bg-yellow-400",
-        description:
-          "Lightweight packaging (plastics, metals, composite materials).",
+        textColor: "text-black",
+        description: "Packaging plastics, metals, and composite packaging.",
         items: [
-          "Plastic packaging (bottles, tubs, films)",
-          "Metal packaging (cans, foil)",
-          "Composite materials (drink cartons)",
+          "Plastic containers",
+          "Metal cans",
+          "Drink cartons",
+          "Aluminum foil",
         ],
       },
       {
-        name: "Papiertonne (Paper/Cardboard)",
+        name: "Blaue Tonne (Blue Bin)",
         color: "bg-blue-500",
         textColor: "text-white",
-        description: "Paper and Cardboard.",
-        items: ["Newspapers", "Cardboard boxes", "Magazines", "Office paper"],
+        description: "Paper and cardboard.",
+        items: [
+          "Newspapers",
+          "Magazines",
+          "Cardboard boxes",
+          "Paper packaging",
+        ],
       },
       {
-        name: "Biotonne (Organic Waste)",
+        name: "Glascontainer (Communal Glass Banks)",
+        color: "bg-green-300",
+        textColor: "text-black",
+        description:
+          "Glass bottles and jars, sorted by color (white, brown, green).",
+        items: [
+          "White glass bottles",
+          "Brown glass bottles",
+          "Green glass bottles",
+        ],
+        notes: "Deposit glass bottles (Pfandflaschen) go back to stores.",
+      },
+      {
+        name: "Biotonne (Organic Waste Bin - if available)",
         color: "bg-green-600",
         textColor: "text-white",
-        description: "Organic waste (food scraps, garden waste).",
+        description: "Organic kitchen and garden waste.",
         items: [
           "Fruit/vegetable scraps",
           "Coffee grounds",
           "Tea bags",
           "Garden waste",
-          "Cooked food leftovers (check local rules)",
+        ],
+      },
+    ],
+    generalAdvice: [
+      "Germany has a deposit system (Pfand) for many beverage containers.",
+      "Sorting is mandatory and rules can be strict.",
+    ],
+    source: "Common knowledge, various German waste management sites.",
+  },
+  JP: {
+    countryName: "Japan",
+    bins: [
+      {
+        name: "Burnable Waste (Moeru Gomi)",
+        color: "bg-red-500",
+        textColor: "text-white",
+        description:
+          "Waste that can be incinerated. Often includes food-contaminated items, some plastics.",
+        items: [
+          "Food scraps (drained)",
+          "Paper scraps (not recyclable)",
+          "Some soft plastics",
+          "Wood items",
+        ],
+        notes:
+          "Specific bags and collection days apply. Rules vary significantly by municipality.",
+      },
+      {
+        name: "Non-Burnable Waste (Moenai Gomi)",
+        color: "bg-blue-400",
+        textColor: "text-white",
+        description: "Items that cannot be incinerated or recycled easily.",
+        items: [
+          "Ceramics",
+          "Broken glass (non-recyclable)",
+          "Small metal items (non-packaging)",
+          "Some hard plastics",
+        ],
+        notes: "Specific bags and collection days apply.",
+      },
+      {
+        name: "Plastic Containers & Packaging (Plastic)",
+        color: "bg-orange-400",
+        textColor: "text-black",
+        description:
+          "Clean plastic containers and packaging (e.g., bottles, trays, wrappers). PET bottles often separate.",
+        items: [
+          "PET bottles (rinsed, caps/labels removed)",
+          "Plastic food trays (rinsed)",
+          "Plastic wrappers (clean)",
         ],
       },
       {
-        name: "Glass (Public Drop-off)",
-        color: "bg-green-300",
+        name: "Cans (Metal)",
+        color: "bg-gray-400",
+        textColor: "text-black",
+        description: "Rinsed aluminum and steel cans.",
+        items: ["Aluminum cans", "Steel cans"],
+      },
+      {
+        name: "Paper & Cardboard",
+        color: "bg-yellow-300",
+        textColor: "text-black",
+        description: "Bundled and tied newspapers, magazines, cardboard.",
+        items: [
+          "Newspapers",
+          "Magazines",
+          "Cardboard boxes (flattened, bundled)",
+        ],
+      },
+      {
+        name: "Glass Bottles & Jars (Glass)",
+        color: "bg-green-400",
+        textColor: "text-white",
         description:
-          "Glass containers, separated by color (clear, brown, green) at public drop-off points.",
+          "Rinsed glass bottles and jars, sometimes sorted by color.",
+        items: [
+          "Clear glass bottles",
+          "Brown glass bottles",
+          "Other colored glass bottles",
+        ],
+      },
+    ],
+    generalAdvice: [
+      "Sorting rules are extremely detailed and vary by city/ward. Always check local guides.",
+      "Large items (Sodai Gomi) require special collection.",
+    ],
+    source: "Common knowledge, various Japanese municipal waste guides.",
+  },
+  KR: {
+    countryName: "South Korea",
+    bins: [
+      {
+        name: "General Waste (Ilban Sseuregi)",
+        color: "bg-gray-500",
+        textColor: "text-white",
+        description:
+          "Non-recyclable waste, placed in district-specific pre-paid bags.",
+        items: [
+          "Non-recyclable items",
+          "Contaminated items",
+          "Broken ceramics",
+        ],
+      },
+      {
+        name: "Recyclables - Metal Cans",
+        color: "bg-neutral-400",
+        textColor: "text-black",
+        description: "Rinsed metal cans.",
+        items: ["Steel cans", "Aluminum cans"],
+      },
+      {
+        name: "Recyclables - Plastics",
+        color: "bg-yellow-500",
+        textColor: "text-black",
+        description: "Clean plastic bottles, containers, and film.",
+        items: [
+          "PET bottles (crushed, caps removed)",
+          "Plastic containers (rinsed)",
+          "Clean plastic film/bags",
+        ],
+      },
+      {
+        name: "Recyclables - Paper & Cardboard",
+        color: "bg-blue-300",
+        textColor: "text-black",
+        description: "Bundled paper and cardboard.",
+        items: [
+          "Newspapers",
+          "Magazines",
+          "Cardboard boxes (flattened, bundled)",
+        ],
+      },
+      {
+        name: "Recyclables - Glass",
+        color: "bg-green-500",
+        textColor: "text-white",
+        description: "Rinsed glass bottles and jars.",
+        items: [
+          "Clear glass bottles",
+          "Brown glass bottles",
+          "Green glass bottles",
+        ],
+      },
+      {
+        name: "Food Waste (Eumsikmul Sseuregi)",
+        color: "bg-orange-600",
+        textColor: "text-white",
+        description:
+          "All food waste, collected separately (often in specific bins/bags, payment may be required).",
+        items: ["Fruit/vegetable scraps", "Meat/fish bones", "Eggshells"],
+        notes:
+          "Drain excess moisture. Non-food items like shells or large bones might be general waste.",
+      },
+    ],
+    generalAdvice: [
+      "Mandatory separation. Use designated bags for general waste. Food waste separation is very strict.",
+    ],
+    source: "Common knowledge, various South Korean municipal waste guides.",
+  },
+  SE: {
+    countryName: "Sweden",
+    bins: [
+      {
+        name: "Residual Waste (Restavfall/Brännbart)",
+        color: "bg-black",
+        textColor: "text-white",
+        description:
+          "Waste that cannot be recycled or composted, often for energy recovery.",
+        items: [
+          "Nappies",
+          "Envelopes",
+          "Vacuum cleaner bags",
+          "Contaminated packaging",
+        ],
+      },
+      {
+        name: "Metal Packaging (Metallförpackningar)",
+        color: "bg-gray-500",
+        textColor: "text-white",
+        description: "Clean metal packaging.",
+        items: [
+          "Food cans",
+          "Drink cans (non-deposit)",
+          "Metal lids",
+          "Clean aluminum foil",
+        ],
+      },
+      {
+        name: "Plastic Packaging (Plastförpackningar)",
+        color: "bg-orange-500",
+        textColor: "text-black",
+        description: "Clean hard and soft plastic packaging.",
+        items: [
+          "Plastic bottles",
+          "Plastic containers",
+          "Plastic film/bags (clean)",
+        ],
+      },
+      {
+        name: "Paper/Cardboard Packaging (Pappersförpackningar)",
+        color: "bg-blue-500",
+        textColor: "text-white",
+        description: "Clean paper and cardboard packaging.",
+        items: [
+          "Cardboard boxes",
+          "Milk/juice cartons (rinsed, flattened)",
+          "Paper bags",
+          "Paper wrapping",
+        ],
+      },
+      {
+        name: "Newspapers/Magazines (Tidningar/Returpapper)",
+        color: "bg-blue-300",
+        textColor: "text-black",
+        description: "Newspapers, magazines, brochures, office paper.",
+        items: ["Newspapers", "Magazines", "Brochures", "Office paper"],
+      },
+      {
+        name: "Glass Packaging (Glasförpackningar)",
+        color: "bg-green-500",
+        textColor: "text-white",
+        description:
+          "Clean glass packaging, sorted by color (clear and colored).",
+        items: ["Clear glass bottles/jars", "Colored glass bottles/jars"],
+        notes: "Deposit glass bottles (Pant) go back to stores.",
+      },
+      {
+        name: "Food Waste (Matavfall - if collected)",
+        color: "bg-brown-600",
+        textColor: "text-white",
+        description: "Food scraps, often collected in special paper bags.",
+        items: [
+          "Fruit/vegetable scraps",
+          "Meat/fish remains",
+          "Coffee grounds",
+          "Tea bags",
+        ],
+      },
+    ],
+    generalAdvice: [
+      "Sweden has a deposit system (Pant) for most beverage cans and PET bottles.",
+      "Recycling stations (Återvinningsstation) are common for packaging.",
+    ],
+    source:
+      "Common knowledge, Avfall Sverige (Swedish Waste Management Association).",
+  },
+  CH: {
+    countryName: "Switzerland",
+    bins: [
+      {
+        name: "General Waste (Kehrichtsack - Fee Bag)",
+        color: "bg-gray-600",
+        textColor: "text-white",
+        description: "Non-recyclable waste in official, taxed garbage bags.",
+        items: [
+          "Non-recyclable items",
+          "Hygiene products",
+          "Contaminated packaging",
+        ],
+      },
+      {
+        name: "Metal (Aluminum/Tin Cans)",
+        color: "bg-neutral-400",
+        textColor: "text-black",
+        description: "Aluminum and tin cans, collected at communal points.",
+        items: ["Aluminum cans", "Tin cans"],
+      },
+      {
+        name: "Plastic (PET Bottles)",
+        color: "bg-yellow-400",
+        textColor: "text-black",
+        description:
+          "PET beverage bottles, collected separately (e.g., supermarkets). Other plastics often general waste or specific collections.",
+        items: ["PET beverage bottles (empty, crushed)"],
+      },
+      {
+        name: "Cardboard (Karton)",
+        color: "bg-amber-600",
+        textColor: "text-white",
+        description:
+          "Flattened cardboard, bundled and collected separately or at communal points.",
+        items: ["Cardboard boxes", "Corrugated cardboard"],
+      },
+      {
+        name: "Paper (Papier)",
+        color: "bg-blue-400",
+        textColor: "text-white",
+        description:
+          "Newspapers, magazines, office paper, bundled and collected separately or at communal points.",
+        items: ["Newspapers", "Magazines", "Office paper", "Paper bags"],
+      },
+      {
+        name: "Glass (Glas)",
+        color: "bg-green-500",
+        textColor: "text-white",
+        description:
+          "Glass bottles and jars, sorted by color (clear, brown, green) at communal glass banks.",
         items: [
           "Clear glass bottles/jars",
           "Brown glass bottles/jars",
           "Green glass bottles/jars",
         ],
       },
-    ],
-    notes:
-      "Highly separated multi-stream recycling. Mandatory sorting. Deposit System (Pfand) for most beverage bottles/cans.",
-  },
-  // Japan: Extremely detailed municipal sorting rules.
-  JP: {
-    countryName: "Japan",
-    bins: [
       {
-        name: "Burnable (Moeru gomi)",
-        color: "bg-red-500",
+        name: "Organic Waste (Grüngut/Compost - if collected)",
+        color: "bg-lime-600",
         textColor: "text-white",
-        description:
-          "General burnable waste. Rules vary by municipality (often food scraps, some plastics, paper).",
-        items: [
-          "Food scraps (check local rules)",
-          "Some plastics (check local rules)",
-          "Paper waste (non-recyclable)",
-          "Wood items",
-        ],
-      },
-      {
-        name: "Non-Burnable (Moenai gomi)",
-        color: "bg-blue-300",
-        description:
-          "Non-burnable items like ceramics, some glass, certain plastics, small metals.",
-        items: [
-          "Ceramics",
-          "Broken glass (non-recyclable)",
-          "Small metal items",
-          "Certain plastics (check local rules)",
-          "Light bulbs",
-        ],
-      },
-      {
-        name: "Recyclables (Shigen gomi)",
-        color: "bg-yellow-500",
-        description:
-          "Separated recyclables: PET bottles, other plastics, cans, glass bottles, paper/cardboard (often bundled).",
-        items: [
-          "PET bottles (caps/labels removed)",
-          "Plastic containers/trays",
-          "Aluminum/steel cans",
-          "Glass bottles (recyclable)",
-          "Paper/cardboard (bundled separately)",
-        ],
-      },
-      {
-        name: "Large-sized waste (Sodai gomi)",
-        color: "bg-gray-500",
-        textColor: "text-white",
-        description:
-          "Large items requiring special collection (often fee-based).",
-        items: ["Furniture", "Appliances", "Bicycles"],
+        description: "Kitchen and garden waste for composting.",
+        items: ["Fruit/vegetable scraps", "Coffee grounds", "Garden waste"],
       },
     ],
-    notes:
-      "Extremely detailed and strict sorting, dictated by municipality. Specific collection days for different categories. Check local guides carefully.",
-  },
-  // South Korea: Mandatory separation, volume-based bags, strict food waste rules.
-  KR: {
-    countryName: "South Korea",
-    bins: [
-      {
-        name: "General Waste Bag (Jongnyangje)",
-        color: "bg-gray-500",
-        textColor: "text-white",
-        description:
-          "General Waste. Requires designated volume-based bags. Food waste is strictly separate.",
-        items: ["Non-recyclable items", "Items not fitting other categories"],
-      },
-      {
-        name: "Food Waste (Eumsikmul Sseuregi)",
-        color: "bg-yellow-600",
-        textColor: "text-white",
-        description:
-          "Mandatory separate collection for all food waste, often using specific bags or bins.",
-        items: ["All food scraps (meat, fish, vegetables, fruit, grains)"],
-      },
-      {
-        name: "Recyclables (Jaewalhyeongpum)",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description:
-          "Collected separately at designated points or bins: Paper, Plastics (various types), Glass, Metal Cans, Styrofoam.",
-        items: [
-          "Paper (newspapers, boxes)",
-          "Plastic containers/bottles (cleaned)",
-          "Glass bottles/jars (cleaned)",
-          "Metal cans (cleaned)",
-          "Styrofoam (cleaned)",
-        ],
-      },
-      {
-        name: "Large-sized waste (Daeyeong Pyegimul)",
-        color: "bg-purple-500",
-        textColor: "text-white",
-        description: "Large items requiring special stickers/collection.",
-        items: ["Furniture", "Large appliances"],
-      },
+    generalAdvice: [
+      "'Polluter pays' principle is strong; taxed bags for general waste. High recycling rates via communal collection points.",
     ],
-    notes:
-      "Mandatory separate collection, often using designated bags with fees. Extensive recycling. Strict food waste separation.",
+    source: "Common knowledge, Swiss federal and cantonal waste guidelines.",
   },
-  // Sweden: Focus on energy recovery and producer responsibility for packaging.
-  SE: {
-    countryName: "Sweden",
-    bins: [
-      {
-        name: "Residual Waste (Brännbart)",
-        color: "bg-black",
-        textColor: "text-white",
-        description: "Residual waste for energy recovery (incineration).",
-        items: ["Non-recyclable items", "Nappies", "Envelopes"],
-      },
-      {
-        name: "Packaging (Förpackningar)",
-        color: "bg-orange-500",
-        description:
-          "Designated collection points/bins for plastics, paper/cardboard packaging, metal, and glass.",
-        items: [
-          "Plastic packaging",
-          "Paper/cardboard packaging",
-          "Metal packaging",
-          "Glass packaging (clear/colored separate)",
-        ],
-      },
-      {
-        name: "Food Waste (Matavfall)",
-        color: "bg-brown-500",
-        textColor: "text-white",
-        description:
-          "Separate collection in many municipalities, often in special paper bags.",
-        items: ["Food scraps", "Coffee grounds", "Tea bags"],
-      },
-      {
-        name: "Newspapers/Magazines (Tidningar)",
-        color: "bg-blue-400",
-        description:
-          "Separate collection for newspapers, magazines, and office paper.",
-        items: ["Newspapers", "Magazines", "Brochures", "Office paper"],
-      },
-      {
-        name: "Hazardous/Electronics (Farligt Avfall/Elavfall)",
-        color: "bg-red-700",
-        textColor: "text-white",
-        description:
-          "Designated drop-off points for hazardous waste and electronics.",
-        items: [
-          "Batteries",
-          "Electronics",
-          "Light bulbs",
-          "Chemicals",
-          "Paint",
-        ],
-      },
-    ],
-    notes:
-      "Emphasis on source separation, high recycling rates, energy recovery. Deposit System (Panta) for most beverage bottles/cans.",
-  },
-  // Switzerland: High recycling rates, polluter-pays principle with taxed bags for general waste.
-  CH: {
-    countryName: "Switzerland",
-    bins: [
-      {
-        name: "General Waste (Fee Bag - Kehrichtsack)",
-        color: "bg-gray-600",
-        textColor: "text-white",
-        description: "Non-recyclable waste in official fee-based bags.",
-        items: ["Non-recyclable items not fitting other categories"],
-      },
-      {
-        name: "Paper/Cardboard",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description:
-          "Often collected separately, bundled for curbside, or at drop-off points.",
-        items: ["Newspapers", "Magazines", "Cardboard boxes (flattened)"],
-      },
-      {
-        name: "Glass/PET/Aluminum/Tin",
-        color: "bg-green-400",
-        description:
-          "Collected at communal drop-off points, often separated by type/color.",
-        items: [
-          "Glass bottles/jars (by color)",
-          "PET bottles (often separate)",
-          "Aluminum cans",
-          "Tin cans",
-        ],
-      },
-      {
-        name: "Organic Waste (Grüngut/Compost)",
-        color: "bg-green-700",
-        textColor: "text-white",
-        description:
-          "Separate collection in many areas for composting (garden and often kitchen waste).",
-        items: ["Fruit/vegetable scraps", "Garden waste", "Coffee grounds"],
-      },
-      {
-        name: "Special Waste (Sonderabfälle)",
-        color: "bg-red-600",
-        textColor: "text-white",
-        description:
-          "Batteries, electronics, chemicals, etc., to designated collection points.",
-        items: ["Batteries", "Electronics", "Medications", "Paints"],
-      },
-    ],
-    notes:
-      "High recycling rates, 'polluter pays' principle with fee-based general waste bags. Extensive separate collection at communal points.",
-  },
-  // Netherlands: High recycling rates, producer responsibility, deposit-return for some packaging.
   NL: {
     countryName: "Netherlands",
     bins: [
       {
-        name: "General Waste (Restafval)",
-        color: "bg-gray-500",
+        name: "Restafval (Grey/Black Bin)",
+        color: "bg-gray-700",
         textColor: "text-white",
         description: "General non-recyclable waste.",
-        items: ["Non-recyclable items", "Nappies"],
-      },
-      {
-        name: "Organic Waste (GFT - Groente-, Fruit-, Tuinafval)",
-        color: "bg-green-500",
-        textColor: "text-white",
-        description:
-          "Organic Waste (vegetable, fruit, garden waste, and often food leftovers).",
         items: [
-          "Vegetable scraps",
-          "Fruit scraps",
-          "Garden waste",
-          "Cooked food (check local rules)",
-          "Coffee filters",
+          "Nappies",
+          "Cat litter",
+          "Contaminated items",
+          "Non-recyclable plastics",
         ],
       },
       {
-        name: "Paper/Cardboard (Papier en Karton)",
+        name: "PMD (Plastic, Metal, Drink cartons - Orange Bin/Bag or Yellow Bin/Bag)",
+        color: "bg-orange-500",
+        textColor: "text-black",
+        description:
+          "Plastic packaging, metal packaging (cans), and drink cartons.",
+        items: [
+          "Plastic bottles/containers/films",
+          "Metal cans/foil",
+          "Drink cartons (Tetra Pak)",
+        ],
+      },
+      {
+        name: "Papier en karton (Blue Bin)",
         color: "bg-blue-500",
         textColor: "text-white",
         description: "Clean and dry paper and cardboard.",
@@ -324,50 +449,54 @@ const countrySpecificBinInfo: Record<string, CountryBinInfo> = {
         ],
       },
       {
-        name: "Packaging (PMD - Plastic, Metaal, Drankkartons)",
-        color: "bg-orange-500",
+        name: "Glas (Glasbak - Communal Glass Banks)",
+        color: "bg-green-400",
+        textColor: "text-white",
+        description: "Glass bottles and jars, often sorted by color.",
+        items: ["Clear glass", "Green glass", "Brown glass"],
+        notes: "Deposit glass bottles (Statiegeld) go back to stores.",
+      },
+      {
+        name: "GFT (Groente-, Fruit- en Tuinafval - Green Bin)",
+        color: "bg-green-600",
+        textColor: "text-white",
         description:
-          "Mixed packaging: Plastic packaging, Metal packaging (cans), Drink cartons.",
+          "Vegetable, fruit, and garden waste, and often food leftovers.",
         items: [
-          "Plastic bottles/containers/films",
-          "Metal cans/foil",
-          "Drink cartons (Tetra Pak)",
+          "Fruit/vegetable scraps",
+          "Coffee grounds",
+          "Tea bags",
+          "Garden waste",
+          "Cooked food (check local)",
         ],
       },
-      {
-        name: "Glass (Glas)",
-        color: "bg-teal-400",
-        description:
-          "Glass bottles and jars, often separated by color at communal bottle banks.",
-        items: ["Glass bottles (clear, green, brown)", "Glass jars"],
-      },
-      {
-        name: "Textiles (Textiel)",
-        color: "bg-purple-400",
-        description:
-          "Clean and dry clothing, shoes, and textiles in designated containers.",
-        items: ["Clothing", "Shoes (paired)", "Towels", "Linens"],
-      },
     ],
-    notes:
-      "Focus on waste separation at source. Deposit System (Statiegeld) for many plastic bottles and cans.",
+    generalAdvice: [
+      "Deposit system (Statiegeld) for many plastic bottles and cans.",
+      "PMD collection is common for mixed packaging.",
+    ],
+    source: "Common knowledge, Milieu Centraal, Rijkswaterstaat.",
   },
-  // Austria: Well-established separation system, high recycling rates, particularly for packaging and organics.
   AT: {
     countryName: "Austria",
     bins: [
       {
-        name: "Restmüll (General Waste)",
+        name: "Restmüll (Grey/Black Bin)",
         color: "bg-gray-700",
         textColor: "text-white",
         description: "General non-recyclable waste.",
-        items: ["Non-recyclable household items", "Hygiene products"],
+        items: [
+          "Hygiene products",
+          "Vacuum cleaner bags",
+          "Contaminated items",
+        ],
       },
       {
-        name: "Leichtverpackungen (Light Packaging)",
+        name: "Leichtverpackungen (Yellow Bin/Bag)",
         color: "bg-yellow-500",
+        textColor: "text-black",
         description:
-          "Plastics, composite materials (drink cartons), small metals.",
+          "Lightweight packaging: plastics, composite materials (drink cartons), small metals.",
         items: [
           "Plastic bottles/packaging",
           "Drink cartons",
@@ -377,7 +506,7 @@ const countrySpecificBinInfo: Record<string, CountryBinInfo> = {
         ],
       },
       {
-        name: "Papier (Paper/Cardboard)",
+        name: "Altpapier (Blue Bin)",
         color: "bg-blue-500",
         textColor: "text-white",
         description: "Clean paper and cardboard.",
@@ -389,1160 +518,930 @@ const countrySpecificBinInfo: Record<string, CountryBinInfo> = {
         ],
       },
       {
-        name: "Bioabfall (Organic Waste)",
-        color: "bg-brown-600",
-        textColor: "text-white",
-        description: "Organic waste from kitchen and garden.",
-        items: [
-          "Fruit/vegetable scraps",
-          "Coffee grounds",
-          "Tea bags",
-          "Garden waste",
-          "Eggshells",
-        ],
-      },
-      {
-        name: "Glas (Glass)",
+        name: "Altglas (Communal Glass Collection)",
         color: "bg-green-300",
+        textColor: "text-black",
         description:
           "Glass containers, separated by color (white/clear and colored) at public drop-off points.",
         items: [
           "White/clear glass bottles/jars",
           "Colored (green, brown) glass bottles/jars",
         ],
+        notes: "Deposit glass bottles (Pfandflaschen) go back to stores.",
       },
       {
-        name: "Metallverpackungen (Metal Packaging - if separate from Leicht)",
-        color: "bg-gray-400",
-        description: "Larger metal packaging if not in yellow bin.",
-        items: ["Large tin cans", "Metal lids"],
+        name: "Bioabfall (Brown or Green Bin - Organic Waste)",
+        color: "bg-brown-600",
+        textColor: "text-white",
+        description: "Organic waste from kitchen and garden.",
+        items: [
+          "Fruit/vegetable scraps",
+          "Coffee grounds",
+          "Tea bags",
+          "Garden waste",
+          "Eggshells",
+        ],
       },
     ],
-    notes:
-      "Similar to Germany, strong emphasis on separate collection for recycling and composting.",
+    generalAdvice: [
+      "Similar to Germany, strong emphasis on separate collection. Deposit system for some beverage containers.",
+    ],
+    source:
+      "Common knowledge, Austrian Ministry for Climate Action, Environment, Energy, Mobility, Innovation and Technology.",
   },
-  // Finland: Extensive separate collection. Deposit System (Palautuspullo/-tölkki) for most beverage bottles/cans.
   FI: {
     countryName: "Finland",
     bins: [
       {
-        name: "Mixed Waste (Sekajäte)",
+        name: "Mixed Waste/Energy Waste (Sekajäte/Energiajäte)",
         color: "bg-gray-500",
         textColor: "text-white",
         description:
-          "General waste that cannot be sorted otherwise, often for energy recovery.",
-        items: ["Non-recyclable items", "Hygiene products", "Broken ceramics"],
+          "General waste that cannot be sorted, often for energy recovery.",
+        items: [
+          "Non-recyclable items",
+          "Hygiene products",
+          "Broken ceramics",
+          "PVC plastics",
+        ],
       },
       {
-        name: "Bio Waste (Biojäte)",
-        color: "bg-brown-500",
+        name: "Metal Packaging (Metallipakkaukset) & Small Metal Items",
+        color: "bg-neutral-500",
         textColor: "text-white",
-        description: "Organic food waste and small amounts of garden waste.",
+        description: "Clean metal packaging and small metal items.",
         items: [
-          "Food scraps (meat, fish, dairy, vegetables)",
-          "Coffee grounds",
-          "Paper towels (if soiled with food)",
+          "Food cans",
+          "Drink cans (non-deposit)",
+          "Metal lids",
+          "Clean aluminum foil/trays",
+          "Empty aerosol cans",
+        ],
+      },
+      {
+        name: "Plastic Packaging (Muovipakkaukset)",
+        color: "bg-yellow-400",
+        textColor: "text-black",
+        description: "Empty, clean, and dry plastic packaging.",
+        items: [
+          "Plastic food packaging (yogurt pots, butter tubs)",
+          "Plastic bottles (rinsed)",
+          "Plastic bags/films (if accepted locally)",
+        ],
+      },
+      {
+        name: "Cardboard Packaging (Kartonkipakkaukset)",
+        color: "bg-orange-400",
+        textColor: "text-black",
+        description:
+          "Clean and dry cardboard packaging, flattened. Includes milk/juice cartons.",
+        items: [
+          "Cardboard boxes (flattened)",
+          "Milk/juice cartons (rinsed, flattened)",
+          "Paper bags",
+          "Pizza boxes (clean parts)",
         ],
       },
       {
         name: "Paper (Paperinkeräys)",
         color: "bg-blue-300",
+        textColor: "text-black",
         description: "Newspapers, magazines, advertisements, office paper.",
         items: [
           "Newspapers",
           "Magazines",
-          "Envelopes (no plastic window)",
-          "Copy paper",
-        ],
-      },
-      {
-        name: "Cardboard Packaging (Kartonkipakkaukset)",
-        color: "bg-yellow-600",
-        textColor: "text-white",
-        description: "Cardboard boxes, milk/juice cartons (rinsed, flattened).",
-        items: [
-          "Cardboard boxes",
-          "Milk/juice cartons",
-          "Paper bags",
-          "Cereal boxes",
+          "Advertisements",
+          "Office paper",
+          "Envelopes",
         ],
       },
       {
         name: "Glass Packaging (Lasipakkaukset)",
         color: "bg-green-400",
-        description: "Glass bottles and jars (rinsed, no caps/lids).",
-        items: ["Glass bottles", "Glass jars (food containers)"],
-      },
-      {
-        name: "Plastic Packaging (Muovipakkaukset)",
-        color: "bg-pink-400",
-        description: "Empty, clean, and dry plastic food packaging.",
-        items: [
-          "Plastic food containers (yogurt pots, butter tubs)",
-          "Plastic bottles (detergent, shampoo)",
-          "Plastic bags/films (clean)",
-        ],
-      },
-      {
-        name: "Metal (Metallinkeräys)",
-        color: "bg-gray-400",
-        description: "Metal packaging and small metal objects.",
-        items: [
-          "Metal cans (food, beverage)",
-          "Foil trays",
-          "Metal lids",
-          "Empty aerosol cans",
-        ],
-      },
-      {
-        name: "Hazardous Waste (Vaarallinen jäte)",
-        color: "bg-red-700",
         textColor: "text-white",
-        description:
-          "Batteries, electronics, paints, chemicals to collection points.",
-        items: ["Batteries", "Energy-saving lamps", "Paints", "Solvents"],
+        description: "Empty glass bottles and jars, rinsed, no caps/lids.",
+        items: ["Glass bottles (clear and colored)", "Glass jars"],
+        notes: "Deposit glass bottles (Palpa) go back to stores.",
+      },
+      {
+        name: "Bio Waste (Biojäte - if collected)",
+        color: "bg-brown-500",
+        textColor: "text-white",
+        description: "Organic food waste and small amounts of garden waste.",
+        items: ["Food scraps", "Coffee grounds", "Paper towels (food-soiled)"],
       },
     ],
-    notes:
-      "Extensive separate collection. Deposit System (Palautuspullo/-tölkki) for most beverage bottles/cans.",
+    generalAdvice: [
+      "Extensive separate collection. Deposit System (Palpa) for most beverage bottles/cans. Check local waste management (e.g., HSY for Helsinki region).",
+    ],
+    source:
+      "Common knowledge, Finnish waste management companies (e.g., Kiertokapula, HSY).",
   },
-  // Norway: High recycling rates, focus on energy recovery. Deposit System (Pant) for most beverage bottles/cans.
   NO: {
     countryName: "Norway",
     bins: [
       {
         name: "Residual Waste (Restavfall)",
-        color: "bg-black",
+        color: "bg-gray-600",
         textColor: "text-white",
-        description:
-          "General waste that cannot be recycled, often for energy recovery.",
-        items: ["Non-recyclable items", "Nappies", "Soiled packaging"],
+        description: "Waste that cannot be sorted into other categories.",
+        items: [
+          "Nappies",
+          "Contaminated packaging",
+          "Non-recyclable plastics",
+          "Ceramics",
+        ],
       },
       {
-        name: "Food Waste (Matavfall)",
-        color: "bg-green-600",
+        name: "Metal Packaging (Metallemballasje)",
+        color: "bg-neutral-500",
         textColor: "text-white",
-        description: "Separate collection in many areas, often in green bags.",
+        description:
+          "Clean metal packaging, often collected with glass or at central points.",
         items: [
-          "Food scraps (all types)",
-          "Coffee grounds",
-          "Paper towels (food soiled)",
+          "Food cans",
+          "Drink cans (non-deposit)",
+          "Clean aluminum foil/trays",
+          "Metal lids",
         ],
       },
       {
         name: "Plastic Packaging (Plastemballasje)",
         color: "bg-purple-400",
+        textColor: "text-white",
         description:
-          "Clean plastic packaging, often collected in clear bags or designated bins.",
+          "Clean plastic packaging (bottles, containers, film). Often collected in specific bags.",
         items: [
-          "Plastic bottles",
-          "Plastic containers",
+          "Plastic bottles (rinsed)",
+          "Plastic containers (rinsed)",
           "Plastic film/bags (clean)",
         ],
       },
       {
-        name: "Paper/Cardboard/Cartons (Papir/Papp/Drikkekartong)",
+        name: "Paper/Cardboard (Papir/Papp)",
         color: "bg-blue-500",
         textColor: "text-white",
-        description: "Paper, cardboard, and drink cartons (rinsed, flattened).",
+        description: "Paper, cardboard, and rinsed drink cartons.",
         items: [
           "Newspapers",
           "Magazines",
           "Cardboard boxes",
-          "Drink cartons (milk, juice)",
+          "Milk/juice cartons (rinsed, flattened)",
         ],
       },
       {
-        name: "Glass & Metal Packaging (Glass- og Metallemballasje)",
-        color: "bg-cyan-400",
-        description:
-          "Glass and metal packaging, often to communal drop-off points.",
-        items: [
-          "Glass bottles/jars (rinsed)",
-          "Metal cans (rinsed)",
-          "Foil trays",
-        ],
-      },
-      {
-        name: "Hazardous Waste (Farlig avfall)",
-        color: "bg-red-600",
+        name: "Glass Packaging (Glassemballasje)",
+        color: "bg-teal-400",
         textColor: "text-white",
         description:
-          "Batteries, electronics, paint etc. to special collection points.",
+          "Clean glass bottles and jars, often collected with metal or at central points.",
+        items: ["Glass bottles (rinsed)", "Glass jars (rinsed)"],
+        notes: "Deposit glass bottles (Pant) go back to stores.",
+      },
+      {
+        name: "Food Waste (Matavfall - if collected)",
+        color: "bg-green-600",
+        textColor: "text-white",
+        description:
+          "All food scraps, often collected in specific (e.g., green) bags.",
         items: [
-          "Batteries",
-          "Light bulbs",
-          "Electronics",
-          "Paint",
-          "Chemicals",
+          "Fruit/vegetable scraps",
+          "Meat/fish bones",
+          "Coffee grounds",
+          "Eggshells",
         ],
       },
     ],
-    notes:
-      "High recycling rates, focus on energy recovery. Deposit System (Pant) for most beverage bottles/cans.",
+    generalAdvice: [
+      "Color-coded bag system is common in many cities (e.g., Oslo). Deposit (Pant) on bottles/cans.",
+    ],
+    source:
+      "Common knowledge, Loop (Norwegian recycling authority), Sortere.no.",
   },
-  // Belgium: Strong emphasis on separate collection, often using specific color-coded bags or bins. 'Polluter pays' principle. Rules can vary by region (Flanders, Wallonia, Brussels).
   BE: {
     countryName: "Belgium",
     bins: [
       {
-        name: "General Waste Bag (Restafval/Déchets résiduels)",
-        color: "bg-gray-700",
+        name: "Residual Waste (Restafval/Déchets Résiduels - Grey/Black Bag/Bin)",
+        color: "bg-gray-500",
         textColor: "text-white",
-        description:
-          "Non-recyclable waste, in designated bags (varies by region).",
-        items: ["Non-recyclable items", "Nappies"],
+        description: "General non-recyclable waste.",
+        items: [
+          "Nappies",
+          "Soiled packaging",
+          "Cat litter",
+          "Non-recyclable items",
+        ],
       },
       {
-        name: "PMD Bag (Plastics, Metals, Drink Cartons)",
-        color: "bg-blue-500",
+        name: "PMC/PMD (Blue Bag - Plastique, Métal, Cartons à boissons)",
+        color: "bg-sky-400",
         textColor: "text-white",
         description:
-          "Blue bag for Plastic bottles/flasks, Metal packaging, Drink cartons.",
+          "Plastic bottles & flasks, metal packaging, drink cartons.",
         items: [
           "Plastic bottles/flasks",
-          "Metal cans/trays",
-          "Aerosols",
-          "Drink cartons",
+          "Metal cans/tins",
+          "Aerosols (empty)",
+          "Drink cartons (Tetra Pak)",
         ],
       },
       {
-        name: "Organic Waste (GFT/Déchets organiques)",
-        color: "bg-green-500",
-        textColor: "text-white",
-        description:
-          "Organic waste (kitchen and garden), often in green bags or bins.",
-        items: [
-          "Fruit/vegetable scraps",
-          "Food leftovers",
-          "Coffee grounds",
-          "Garden waste (small amounts)",
-        ],
-      },
-      {
-        name: "Paper/Cardboard (Papier en Karton/Papiers-Cartons)",
+        name: "Paper/Cardboard (Papier/Carton - Yellow Bag/Bin or bundled)",
         color: "bg-yellow-400",
-        description:
-          "Clean paper and cardboard, often bundled or in specific containers.",
-        items: ["Newspapers", "Magazines", "Cardboard boxes (flattened)"],
-      },
-      {
-        name: "Glass (Glas/Verre)",
-        color: "bg-teal-300",
-        description:
-          "Glass bottles and jars to communal glass containers (clear and colored separated).",
-        items: ["Clear glass bottles/jars", "Colored glass bottles/jars"],
-      },
-      {
-        name: "Special Waste (Klein Gevaarlijk Afval/Petits Déchets Dangereux)",
-        color: "bg-red-500",
-        textColor: "text-white",
-        description: "Batteries, paints, oils, electronics to container parks.",
-        items: [
-          "Batteries",
-          "Paints",
-          "Oils",
-          "Small electronics",
-          "Medication",
-        ],
-      },
-    ],
-    notes:
-      "Strong emphasis on separate collection, often using specific color-coded bags or bins. 'Polluter pays' principle. Rules can vary by region (Flanders, Wallonia, Brussels).",
-  },
-  // France: Increasing separation, color-coded bins, public drop-off points.
-  FR: {
-    countryName: "France",
-    bins: [
-      {
-        name: "General Waste (Ordures Ménagères)",
-        color: "bg-gray-600",
-        textColor: "text-white",
-        description:
-          "Non-recyclable household waste. Bin color can be green or grey.",
-        items: ["Non-recyclable items", "Nappies", "Broken crockery"],
-      },
-      {
-        name: "Packaging (Bac Jaune - Emballages)",
-        color: "bg-yellow-400",
-        description:
-          "Yellow bin for mixed packaging (plastics, metal, cardboard bricks, paper). Rules expanding.",
-        items: [
-          "Plastic bottles/pots/films",
-          "Metal cans/aerosols",
-          "Cardboard boxes/bricks (Tetra Pak)",
-          "Paper (newspapers, magazines if included)",
-        ],
-      },
-      {
-        name: "Glass (Verre)",
-        color: "bg-green-700",
-        textColor: "text-white",
-        description:
-          "Glass bottles and jars (no lids, rinsed) to communal bins (often white or green).",
-        items: ["Glass bottles (wine, juice)", "Glass jars (food)"],
-      },
-      {
-        name: "Organic Waste (Déchets Alimentaires/Compost)",
-        color: "bg-brown-500",
-        textColor: "text-white",
-        description:
-          "Organic waste collection is increasing, or for home composting.",
-        items: [
-          "Fruit/vegetable scraps",
-          "Food leftovers (check local rules)",
-          "Coffee grounds",
-          "Garden waste (if accepted)",
-        ],
-      },
-      {
-        name: "Special Waste (Déchetterie)",
-        color: "bg-red-600",
-        textColor: "text-white",
-        description:
-          "Bulky waste, electronics, hazardous items to local waste collection centers (déchetterie).",
-        items: ["Furniture", "Electronics", "Batteries", "Paint", "Chemicals"],
-      },
-    ],
-    notes:
-      "Increasingly harmonized national guidelines ('Tri Sélectif'). Yellow bin (bac jaune) rules are expanding to include more plastics. Check local municipality for specifics.",
-  },
-  // Italy: Varies by region/municipality, door-to-door and street bin systems.
-  IT: {
-    countryName: "Italy",
-    bins: [
-      {
-        name: "General Waste (Indifferenziato/Secco Residuo)",
-        color: "bg-gray-700",
-        textColor: "text-white",
-        description: "Non-recyclable waste.",
-        items: ["Non-recyclable items", "Nappies", "Ceramics"],
-      },
-      {
-        name: "Organic Waste (Organico/Umido)",
-        color: "bg-brown-600",
-        textColor: "text-white",
-        description: "Organic food waste and sometimes garden waste.",
-        items: [
-          "Food scraps (fruit, vegetables, meat, fish)",
-          "Coffee grounds",
-          "Tea bags",
-          "Soiled paper towels",
-        ],
-      },
-      {
-        name: "Plastic & Metals (Plastica e Metalli)",
-        color: "bg-yellow-500",
-        description:
-          "Often collected together: Plastic bottles/containers, metal cans/foil.",
-        items: [
-          "Plastic bottles/containers (rinsed)",
-          "Plastic bags/film (check local)",
-          "Metal cans (food, beverage)",
-          "Aluminum foil/trays",
-        ],
-      },
-      {
-        name: "Paper/Cardboard (Carta e Cartone)",
-        color: "bg-blue-500",
-        textColor: "text-white",
+        textColor: "text-black",
         description: "Clean paper and cardboard.",
         items: [
           "Newspapers",
           "Magazines",
           "Cardboard boxes (flattened)",
           "Paper bags",
-          "Drink cartons (check local if with paper or plastic)",
         ],
       },
       {
-        name: "Glass (Vetro)",
-        color: "bg-green-500",
-        textColor: "text-white",
-        description: "Glass bottles and jars (rinsed, no lids).",
-        items: ["Glass bottles", "Glass jars"],
-      },
-      {
-        name: "Special Waste (Rifiuti Speciali/RAEE)",
-        color: "bg-red-700",
+        name: "Glass (Verre/Glas - Communal Glass Bins/Containers)",
+        color: "bg-emerald-400",
         textColor: "text-white",
         description:
-          "Batteries, electronics (RAEE), medicines, bulky items to ecological islands or collection services.",
-        items: ["Batteries", "Electronics", "Medicines", "Light bulbs"],
+          "Glass bottles and jars, often sorted by color (green for mixed, white for clear, brown for brown).",
+        items: ["Clear glass bottles/jars", "Colored glass bottles/jars"],
+      },
+      {
+        name: "Organic Waste (GFT/Déchets Organiques - if collected)",
+        color: "bg-green-600",
+        textColor: "text-white",
+        description:
+          "Fruit, vegetable, garden waste, and often food leftovers.",
+        items: [
+          "Fruit/vegetable scraps",
+          "Coffee grounds",
+          "Garden waste",
+          "Cooked food (check local)",
+        ],
       },
     ],
-    notes:
-      "Highly variable by municipality ('comune'). Door-to-door ('porta a porta') collection is common. 'Raccolta Differenziata' is the term for separate collection. Always check local rules.",
+    generalAdvice: [
+      "Sorting rules are strict and vary by region (Flanders, Wallonia, Brussels). Check local waste collection calendar (ophaalkalender).",
+    ],
+    source:
+      "Common knowledge, Fost Plus, regional waste authorities (e.g., OVAM, BeWaPP, Bruxelles-Propreté).",
   },
-  // United Kingdom: Varies by council, common multi-stream or co-mingled collections.
+  FR: {
+    countryName: "France",
+    bins: [
+      {
+        name: "Ordures Ménagères (Grey Bin)",
+        color: "bg-gray-600",
+        textColor: "text-white",
+        description: "Non-recyclable household waste.",
+        items: [
+          "Non-recyclable items",
+          "Food-soiled packaging",
+          "Nappies",
+          "Broken crockery",
+        ],
+      },
+      {
+        name: "Emballages et Papiers (Yellow Bin)",
+        color: "bg-yellow-400",
+        textColor: "text-black",
+        description:
+          "Packaging metals, plastic bottles/containers, packaging cardboard, graphic paper.",
+        items: [
+          "Metal cans",
+          "Plastic bottles/containers",
+          "Cardboard packaging (flattened)",
+          "Newspapers/Magazines",
+          "Drink cartons",
+        ],
+        notes:
+          "Rules for what goes in the yellow bin are expanding (Extension des consignes de tri). Check local rules.",
+      },
+      {
+        name: "Verre (Green Bin)",
+        color: "bg-green-500",
+        textColor: "text-white",
+        description: "Glass bottles and jars.",
+        items: ["Glass bottles", "Glass jars (no lids, no ceramics/pyrex)"],
+      },
+      {
+        name: "Bio-déchets (Brown Bin - if collected)",
+        color: "bg-brown-600",
+        textColor: "text-white",
+        description: "Food scraps and small garden waste.",
+        items: [
+          "Fruit/vegetable scraps",
+          "Coffee grounds",
+          "Tea bags",
+          "Eggshells",
+        ],
+      },
+    ],
+    generalAdvice: [
+      "Sorting instructions (consignes de tri) can vary locally. 'Bac jaune' is common for mixed recyclables. Bio-waste collection is expanding.",
+    ],
+    source:
+      "Common knowledge, ADEME (French Environment and Energy Management Agency), Citeo.",
+  },
+  IT: {
+    countryName: "Italy",
+    bins: [
+      {
+        name: "Indifferenziato/Secco Non Riciclabile (General Trash)",
+        color: "bg-gray-500",
+        textColor: "text-white",
+        description: "General waste that cannot be separated for recycling.",
+        items: [
+          "Non-recyclable items",
+          "Nappies",
+          "Ceramics",
+          "Contaminated items",
+        ],
+      },
+      {
+        name: "Plastica (Plastic Bin/Bag)",
+        color: "bg-yellow-500",
+        textColor: "text-black",
+        description:
+          "Plastic packaging (bottles, containers). Metal often collected with plastic or glass.",
+        items: [
+          "Plastic bottles/containers",
+          "Plastic film (check local)",
+          "Sometimes metal cans/foil (check local)",
+        ],
+      },
+      {
+        name: "Carta e Cartone (Paper Bin/Bag)",
+        color: "bg-blue-400",
+        textColor: "text-white",
+        description: "Paper and cardboard items.",
+        items: [
+          "Newspapers",
+          "Cardboard boxes (flattened)",
+          "Magazines",
+          "Paper packaging",
+        ],
+      },
+      {
+        name: "Vetro (Glass Bin/Bag)",
+        color: "bg-green-600",
+        textColor: "text-white",
+        description:
+          "Glass bottles and jars. Metal often collected with glass or plastic.",
+        items: [
+          "Glass bottles",
+          "Glass jars (no lids)",
+          "Sometimes metal cans (check local)",
+        ],
+      },
+      {
+        name: "Organico/Umido (Organic Waste Bin/Bag)",
+        color: "bg-brown-700",
+        textColor: "text-white",
+        description: "Food scraps and organic matter.",
+        items: [
+          "Fruit/vegetable scraps",
+          "Meat/fish bones",
+          "Coffee grounds",
+          "Soiled paper napkins",
+        ],
+      },
+    ],
+    generalAdvice: [
+      "'Raccolta differenziata' (separate collection) is often door-to-door with specific calendars. Rules vary significantly by comune (municipality).",
+    ],
+    source:
+      "Common knowledge, Italian Ministry of Environment, local municipal waste guides.",
+  },
   GB: {
+    // United Kingdom
     countryName: "United Kingdom",
     bins: [
       {
-        name: "General Waste (Residual Waste)",
+        name: "General Waste (Black/Grey Bin)",
         color: "bg-black",
         textColor: "text-white",
-        description:
-          "Non-recyclable household waste. Bin color often black, but can be grey or green.",
+        description: "Non-recyclable household waste.",
         items: [
-          "Non-recyclable items",
           "Plastic bags/film (most areas)",
           "Polystyrene",
+          "Crisp packets",
           "Nappies",
+          "Contaminated food packaging",
         ],
       },
       {
-        name: "Mixed Dry Recycling",
-        color: "bg-blue-600",
+        name: "Mixed Recyclables (Blue/Green/Yellow Bin - varies by council)",
+        color: "bg-blue-500", // Example color, can vary
         textColor: "text-white",
         description:
-          "Often mixed: paper, cardboard, plastic bottles, cans. Contents vary by council.",
+          "Paper, cardboard, plastic bottles, hard containers, cans, glass (rules vary).",
         items: [
-          "Paper (newspapers, magazines)",
-          "Cardboard (flattened boxes)",
+          "Newspapers",
+          "Cardboard (flattened)",
           "Plastic bottles (rinsed, lids on/off varies)",
-          "Metal cans (food, drink, rinsed)",
-          "Glass bottles/jars (sometimes included, or separate)",
+          "Food tins/drink cans (rinsed)",
+          "Glass bottles/jars (rinsed)",
         ],
+        notes:
+          "Check local council for specific items accepted, especially plastic types and if glass is included or separate.",
       },
       {
-        name: "Food & Garden Waste (Organics)",
-        color: "bg-brown-500",
+        name: "Food Waste (Small Green/Brown Caddy/Bin - if collected)",
+        color: "bg-green-600",
         textColor: "text-white",
-        description: "Food scraps and/or garden waste. Collection varies.",
+        description: "All food scraps (cooked and uncooked).",
         items: [
-          "Food scraps (all types, cooked/uncooked)",
-          "Garden waste (grass, leaves, small branches)",
+          "Fruit/vegetable peelings",
+          "Meat/fish bones",
           "Tea bags",
           "Coffee grounds",
+          "Leftovers",
         ],
       },
       {
-        name: "Glass (Separate Collection)",
-        color: "bg-green-300",
-        description:
-          "Glass bottles and jars, if not in mixed recycling. Often to bottle banks.",
-        items: ["Glass bottles (all colors)", "Glass jars"],
-      },
-      {
-        name: "Household Waste Recycling Centre (HWRC)",
-        color: "bg-purple-600",
+        name: "Garden Waste (Green Bin - often subscription)",
+        color: "bg-lime-600",
         textColor: "text-white",
-        description:
-          "For bulky items, electronics, batteries, hazardous waste, extra recyclables.",
-        items: [
-          "Furniture",
-          "Electronics (WEEE)",
-          "Batteries",
-          "Wood",
-          "Rubble",
-          "Chemicals",
-        ],
+        description: "Green waste from the garden.",
+        items: ["Grass cuttings", "Leaves", "Small branches", "Weeds"],
       },
     ],
-    notes:
-      "Decentralized, highly variable by local authority (council). Check your council's website for specific rules. 'Kerbside' collection is common.",
+    generalAdvice: [
+      "Recycling rules vary significantly by local council. Use the postcode checker on the government or council website. Soft plastics often require supermarket drop-off.",
+    ],
+    source:
+      "Common knowledge, UK government guidelines, WRAP (Waste & Resources Action Programme).",
   },
-  // Canada: Varies by province/municipality, common multi-stream systems.
   CA: {
     countryName: "Canada",
     bins: [
       {
-        name: "General Waste/Garbage",
+        name: "Garbage/Landfill (Black/Grey Bin)",
         color: "bg-gray-700",
         textColor: "text-white",
-        description: "Non-recyclable waste.",
+        description: "Non-recyclable and non-compostable waste.",
         items: [
-          "Non-recyclable items",
-          "Plastic bags/film (most areas)",
+          "Plastic bags (most areas)",
           "Styrofoam",
-          "Broken glass (wrapped)",
+          "Non-recyclable plastics",
+          "Broken glass (check local for safety)",
+          "Pet waste",
         ],
       },
       {
-        name: "Blue Bin/Box (Recycling)",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description:
-          "Often single-stream for mixed paper, cardboard, plastic containers (check numbers), glass, metal cans. Varies by municipality.",
-        items: [
-          "Paper (newspapers, flyers)",
-          "Cardboard (flattened)",
-          "Plastic containers (#1-7, check local)",
-          "Glass bottles/jars",
-          "Metal cans",
-          "Milk/juice cartons",
-        ],
-      },
-      {
-        name: "Green Bin (Organic Waste)",
-        color: "bg-green-600",
-        textColor: "text-white",
-        description:
-          "Food scraps and garden waste. Common in many urban areas.",
-        items: [
-          "Food scraps (all types)",
-          "Soiled paper products (napkins, pizza boxes if allowed)",
-          "Coffee grounds",
-          "Tea bags",
-          "Yard waste",
-        ],
-      },
-      {
-        name: "Special Waste Drop-off (Depots/Round-ups)",
-        color: "bg-red-600",
-        textColor: "text-white",
-        description:
-          "For electronics, batteries, hazardous waste, paint, tires.",
-        items: [
-          "Electronics",
-          "Batteries",
-          "Household hazardous waste (chemicals, paint)",
-          "Tires",
-        ],
-      },
-    ],
-    notes:
-      "Decentralized by province and municipality. 'Blue Bin' programs are widespread. Organic waste collection (Green Bin) is common in cities.",
-  },
-  // United States: Highly variable by municipality, often single-stream or dual-stream.
-  US: {
-    countryName: "United States",
-    bins: [
-      {
-        name: "Trash/Garbage (General Waste)",
-        color: "bg-black",
-        textColor: "text-white",
-        description: "General non-recyclable household waste.",
-        items: [
-          "Non-recyclable items",
-          "Plastic bags/film",
-          "Styrofoam",
-          "Food-soiled paper (unless composted)",
-          "Broken ceramics/glass (wrapped)",
-        ],
-      },
-      {
-        name: "Recycling (Single Stream or Multi-Stream)",
+        name: "Recycling (Blue Bin - often mixed)",
         color: "bg-blue-600",
         textColor: "text-white",
         description:
-          "Commonly single-stream (mixed paper, cardboard, plastic containers, glass, metal cans). Rules vary widely by municipality.",
+          "Paper, plastics (specific types), glass, metal containers.",
         items: [
-          "Paper (newspaper, mail, magazines)",
+          "Newspapers/Flyers",
           "Cardboard (flattened)",
-          "Plastic bottles & containers (check local for accepted numbers, typically #1, #2, #5; clean & empty)",
-          "Glass bottles & jars (clean & empty)",
-          "Metal cans (aluminum, steel; clean & empty)",
+          "Plastic bottles/containers (rinsed, check accepted numbers #1-#7, varies)",
+          "Metal cans (rinsed)",
+          "Glass bottles/jars (rinsed)",
         ],
+        notes:
+          "Accepted materials vary by province and municipality. Check local guidelines.",
       },
       {
-        name: "Compost/Organics (Green Waste)",
-        color: "bg-green-600",
+        name: "Organics/Green Bin (Compost)",
+        color: "bg-green-700",
         textColor: "text-white",
-        description: "Food scraps and yard waste. Availability and rules vary.",
+        description: "Food scraps and yard waste.",
         items: [
           "Fruit/vegetable scraps",
-          "Yard trimmings (leaves, grass)",
-          "Coffee grounds",
-          "Eggshells",
-          "Food-soiled paper (if allowed locally)",
-        ],
-      },
-      {
-        name: "Special Waste (Drop-off/Collection Events)",
-        color: "bg-red-700",
-        textColor: "text-white",
-        description:
-          "For electronics (e-waste), batteries, hazardous household waste (HHW), paint, medications.",
-        items: [
-          "Electronics",
-          "Batteries",
-          "Fluorescent bulbs",
-          "Paint",
-          "Chemicals",
-          "Unused medications",
+          "Coffee grounds/filters",
+          "Tea bags",
+          "Meat/fish/dairy (check local)",
+          "Soiled paper products (napkins, pizza boxes - check local)",
+          "Yard trimmings",
         ],
       },
     ],
-    notes:
-      "Extremely decentralized, managed at municipal or county level. Single-stream recycling is common, but what's accepted varies significantly. Always check local guidelines.",
+    generalAdvice: [
+      "Recycling programs are provincially managed but implemented municipally. Deposit-return systems for beverage containers in many provinces.",
+    ],
+    source:
+      "Common knowledge, various Canadian municipal and provincial waste management sites.",
   },
-  // Australia: Typically multi-stream with kerbside collection; container deposit schemes in some states.
   AU: {
     countryName: "Australia",
     bins: [
       {
-        name: "General Waste/Landfill (Red Lid)",
+        name: "General Waste (Red Lid Bin - Landfill)",
         color: "bg-red-600",
         textColor: "text-white",
-        description:
-          "Non-recyclable waste for landfill. Typically red-lidded bin.",
+        description: "Waste that cannot be recycled or composted.",
         items: [
-          "Non-recyclable items",
-          "Plastic bags/soft plastics (unless specific program like REDcycle)",
+          "Plastic bags/soft plastics (unless specific collection)",
           "Nappies",
           "Broken crockery",
           "Polystyrene",
+          "Food scraps (if no FOGO/Green bin)",
         ],
       },
       {
-        name: "Mixed Recyclables (Yellow Lid)",
-        color: "bg-yellow-400",
+        name: "Recycling (Yellow Lid Bin)",
+        color: "bg-yellow-500",
+        textColor: "text-black",
         description:
-          "Commonly for paper, cardboard, plastic bottles/containers, metal cans, glass bottles/jars. Typically yellow-lidded bin.",
+          "Paper, cardboard, glass, plastics (hard containers), metal.",
         items: [
           "Paper (clean)",
           "Cardboard (flattened)",
-          "Plastic bottles/containers (rigid, empty, lids off/on varies)",
-          "Steel/aluminum cans (empty)",
-          "Glass bottles/jars (empty, lids off)",
+          "Glass bottles/jars (rinsed, lids off)",
+          "Plastic containers (rinsed, lids off, typically types 1, 2, 3, 5)",
+          "Steel/aluminum cans (rinsed)",
+          "Empty aerosol cans",
+          "Clean aluminum foil (scrunched)",
         ],
+        notes:
+          "Check local council for specific plastic types accepted. Keep items loose, not in bags.",
       },
       {
-        name: "Organics/Garden Waste (Green Lid)",
+        name: "Organics/Green Waste (Green Lid Bin - FOGO: Food Organics Garden Organics, if available)",
         color: "bg-green-500",
         textColor: "text-white",
-        description:
-          "Food scraps and garden waste. Availability varies. Typically green-lidded bin.",
+        description: "Food scraps and garden waste.",
         items: [
           "Food scraps (all types)",
-          "Garden waste (lawn clippings, leaves, small branches)",
-          "Soiled paper/cardboard (check council)",
-          "Coffee grounds",
-          "Tea bags",
+          "Grass clippings",
+          "Leaves",
+          "Small branches",
+          "Soiled paper/cardboard (check local)",
         ],
       },
       {
-        name: "Special Waste (Council Drop-off/Services)",
-        color: "bg-purple-500",
+        name: "Glass (Purple Lid Bin - emerging in some areas)",
+        color: "bg-purple-600",
         textColor: "text-white",
-        description:
-          "For e-waste, batteries, chemicals, mattresses, white goods. Check council for services.",
-        items: [
-          "E-waste (computers, TVs)",
-          "Batteries",
-          "Chemicals (paints, oils)",
-          "Mattresses",
-          "White goods (fridges, washing machines)",
-        ],
+        description: "Dedicated glass recycling bin to improve quality.",
+        items: ["Glass bottles/jars (rinsed, lids off)"],
       },
     ],
-    notes:
-      "Largely standardized bin lid colors nationally (Red, Yellow, Green), but accepted contents can vary by local council. Check your local council's website.",
+    generalAdvice: [
+      "Follow the bin lid colors. 'Recycle Right' campaigns provide local info. Soft plastics often go to REDcycle bins at supermarkets.",
+    ],
+    source: "Common knowledge, Planet Ark, Australian local council websites.",
   },
-  // New Zealand: Kerbside recycling common, focus on waste minimization.
   NZ: {
     countryName: "New Zealand",
     bins: [
       {
-        name: "General Waste/Refuse (Red Lid)",
-        color: "bg-red-700",
+        name: "General Waste/Rubbish Bin",
+        color: "bg-red-600", // Often red lid, but can vary
         textColor: "text-white",
-        description:
-          "Non-recyclable waste for landfill. Typically red-lidded bin.",
+        description: "Waste that cannot be recycled or composted.",
         items: [
-          "Non-recyclable items",
-          "Plastic bags/soft plastics (check local)",
+          "Plastic bags/soft plastics (unless specific collection)",
           "Nappies",
+          "Broken items",
           "Polystyrene",
-          "Broken glass (wrapped)",
+          "Food scraps (if no separate collection)",
         ],
       },
       {
-        name: "Mixed Recyclables (Yellow Lid)",
+        name: "Mixed Recycling Bin (Often Yellow Lid)",
         color: "bg-yellow-400",
+        textColor: "text-black",
         description:
-          "Commonly for paper, cardboard, plastic containers (#1, #2, #5 typically), metal cans, glass. Typically yellow-lidded bin.",
+          "Paper, cardboard, plastics (typically #1, #2, #5), glass, cans.",
         items: [
           "Paper (clean)",
           "Cardboard (flattened)",
-          "Plastic containers (#1, #2, #5 - clean, lids off)",
-          "Metal cans (clean)",
-          "Glass bottles/jars (clean, lids off - sometimes separate)",
+          "Plastic bottles/containers (rinsed, lids off, check numbers #1, #2, #5)",
+          "Glass bottles/jars (rinsed, lids off)",
+          "Metal cans (rinsed)",
         ],
+        notes:
+          "Check with your local council as services and accepted items vary significantly.",
       },
       {
-        name: "Organics/Food & Garden Waste (Green Lid or separate)",
-        color: "bg-green-500",
+        name: "Food Scraps/Organics Bin (Often Green Lid - if available)",
+        color: "bg-green-600",
         textColor: "text-white",
-        description:
-          "Food scraps and garden waste. Availability and system vary.",
+        description: "Food scraps and sometimes garden waste.",
         items: [
-          "Food scraps (all types)",
-          "Garden waste",
+          "Fruit/vegetable scraps",
           "Coffee grounds",
           "Tea bags",
+          "Meat/fish/dairy (check local)",
         ],
       },
       {
-        name: "Glass (Separate Crate/Bin)",
-        color: "bg-blue-300",
-        description:
-          "Glass bottles and jars, often collected separately in a crate or small bin.",
-        items: ["Glass bottles (all colors)", "Glass jars"],
-      },
-      {
-        name: "Transfer Stations/Community Recycling Centres",
-        color: "bg-indigo-500",
+        name: "Glass Crate/Bin (Sometimes separate)",
+        color: "bg-teal-500",
         textColor: "text-white",
         description:
-          "For larger items, e-waste, hazardous waste, excess recycling.",
-        items: [
-          "E-waste",
-          "Batteries",
-          "Hazardous waste",
-          "Whiteware",
-          "Scrap metal",
-          "Tyres",
-        ],
+          "Glass bottles and jars, collected separately in some areas.",
+        items: ["Glass bottles/jars (rinsed, lids off)"],
       },
     ],
-    notes:
-      "Similar to Australia, with increasingly standardized bin colors but varying rules by council. Glass often collected separately.",
+    generalAdvice: [
+      "Recycling rules vary greatly by council. Check your local council's website for specific guidelines. Focus on reducing waste first.",
+    ],
+    source: "Common knowledge, New Zealand local council websites, WasteMINZ.",
   },
-  // Singapore: Advanced waste-to-energy incineration for general waste. Focus on reducing contamination in blue recycling bins. Food waste separate collection is more common for commercial/industrial.
   SG: {
     countryName: "Singapore",
     bins: [
       {
-        name: "General Waste (Incineration)",
-        color: "bg-green-700",
+        name: "General Waste (Brown/Green Bin)",
+        color: "bg-green-600", // Or brown, for landed properties often green
         textColor: "text-white",
         description:
-          "General waste for incineration at Waste-to-Energy plants. Typically green or brown bins.",
+          "Non-recyclable waste. Food waste should be bagged if not in a dedicated food waste bin.",
         items: [
-          "Non-recyclable items",
-          "Food waste (residential generally)",
-          "Soiled packaging",
-          "Disposable plastics not accepted for recycling",
+          "Food waste (bagged)",
+          "Nappies",
+          "Styrofoam",
+          "Contaminated packaging",
+          "Non-recyclable plastics",
         ],
       },
       {
-        name: "Recycling (Blue Bins)",
+        name: "Recyclables (Blue Bin - Commingled)",
         color: "bg-blue-500",
         textColor: "text-white",
         description:
-          "Mixed recyclables (paper, plastic, glass, metal) in blue bins. No need to sort. Ensure items are clean.",
+          "All recyclables (paper, plastic, glass, metal) go into one blue bin. Rinse items.",
         items: [
-          "Paper/cardboard (clean)",
+          "Paper/cardboard (clean, dry)",
           "Plastic bottles/containers (rinsed)",
           "Glass bottles/jars (rinsed)",
           "Metal cans (rinsed)",
         ],
+        notes:
+          "Ensure recyclables are clean and free of food/liquids. Do not bag recyclables.",
       },
       {
-        name: "E-waste (Regulated Collection Points)",
-        color: "bg-purple-600",
+        name: "E-waste (Separate Collection Points/Programs)",
+        color: "bg-purple-500",
         textColor: "text-white",
         description:
-          "Electronic waste to be brought to designated e-waste collection points (e.g., ALBA bins).",
+          "Electronic waste to be dropped at designated e-waste collection points (e.g., ALBA E-waste).",
         items: [
-          "Computers",
+          "Batteries",
           "Mobile phones",
-          "Batteries (portable)",
-          "Lamps",
-          "Large appliances (via take-back schemes)",
+          "Laptops",
+          "Light bulbs",
+          "Printers",
+          "Other consumer electronics",
         ],
       },
+      {
+        name: "Food Waste (Dedicated Bin - if available, e.g., in some condos/precincts)",
+        color: "bg-orange-600",
+        textColor: "text-white",
+        description: "Separated food waste for treatment.",
+        items: ["Fruit/vegetable scraps", "Cooked food", "Meat/fish"],
+      },
     ],
-    notes:
-      "Advanced waste-to-energy incineration for general waste. Focus on reducing contamination in blue recycling bins. Food waste separate collection is more common for commercial/industrial.",
+    generalAdvice: [
+      "National recycling program with blue commingled recycling bins. Check NEA (National Environment Agency) website for specifics, especially for e-waste and what not to recycle.",
+    ],
+    source: "Common knowledge, NEA Singapore website.",
   },
-  // Denmark: Very high recycling rates, extensive use of waste-to-energy. Sorting systems can have many fractions (up to 10 or more). Deposit System (Pant) for most beverage containers.
   DK: {
     countryName: "Denmark",
     bins: [
       {
         name: "Residual Waste (Restaffald)",
-        color: "bg-gray-600",
+        color: "bg-gray-700",
         textColor: "text-white",
         description:
-          "General waste that cannot be sorted into other fractions, often for energy recovery.",
+          "Waste for incineration, items that cannot be recycled or sorted otherwise.",
         items: [
-          "Non-recyclable items",
-          "Pizza boxes (greasy)",
-          "Milk/juice cartons (check local, some sort as cardboard)",
           "Nappies",
+          "Pizza boxes (greasy)",
+          "Milk/juice cartons (often, check local - some now plastic)",
           "Vacuum cleaner bags",
+          "Contaminated items",
         ],
       },
       {
-        name: "Food & Garden Waste (Mad- og Haveaffald/Bioaffald)",
-        color: "bg-green-600",
-        textColor: "text-white",
-        description: "Organic waste from kitchen and garden.",
+        name: "Metal (Metal)",
+        color: "bg-neutral-400",
+        textColor: "text-black",
+        description: "Clean metal packaging and small metal items.",
         items: [
-          "Food scraps (all types)",
-          "Coffee grounds/filters",
-          "Tea bags",
-          "Small garden waste (leaves, grass)",
+          "Food cans",
+          "Drink cans (non-deposit)",
+          "Aluminum foil (clean)",
+          "Small metal objects",
+          "Empty aerosol cans",
         ],
       },
       {
-        name: "Paper & Small Cardboard (Papir og Småt Pap)",
+        name: "Plastic (Plast)",
+        color: "bg-orange-400",
+        textColor: "text-black",
+        description: "Clean hard and soft plastic packaging.",
+        items: [
+          "Plastic bottles (rinsed)",
+          "Plastic food containers (rinsed)",
+          "Plastic bags/film (clean, if accepted)",
+        ],
+      },
+      {
+        name: "Cardboard (Pap)",
+        color: "bg-amber-700",
+        textColor: "text-white",
+        description: "Clean and dry cardboard packaging, flattened.",
+        items: [
+          "Cardboard boxes",
+          "Corrugated cardboard",
+          "Cardboard egg cartons",
+        ],
+      },
+      {
+        name: "Paper (Papir)",
         color: "bg-blue-400",
-        description: "Clean paper and small cardboard items.",
+        textColor: "text-white",
+        description: "Clean paper.",
         items: [
           "Newspapers",
           "Magazines",
-          "Advertisements",
           "Office paper",
-          "Small cardboard boxes (e.g. cereal boxes, shoe boxes - flattened)",
+          "Envelopes",
+          "Brochures",
         ],
       },
       {
         name: "Glass (Glas)",
-        color: "bg-purple-500",
+        color: "bg-green-400",
         textColor: "text-white",
-        description: "Clean glass bottles and jars (no lids).",
+        description: "Clean glass bottles and jars.",
+        items: ["Glass bottles (clear and colored)", "Glass jars (no lids)"],
+        notes: "Deposit bottles/cans (Pant) go back to stores.",
+      },
+      {
+        name: "Food Waste (Madaffald - increasingly common)",
+        color: "bg-lime-600",
+        textColor: "text-white",
+        description: "Raw and cooked food waste, often in special bio-bags.",
         items: [
-          "Glass bottles (wine, beer, soda)",
-          "Glass jars (food containers)",
+          "Fruit/vegetable scraps",
+          "Meat/fish",
+          "Dairy",
+          "Bread",
+          "Coffee grounds",
         ],
       },
       {
-        name: "Plastic & Metal & Food/Drink Cartons (Plast, Metal & Mad- og Drikkekartoner)",
-        color: "bg-orange-500",
-        description:
-          "Combined collection for clean hard plastic packaging, metal packaging, and food/drink cartons.",
-        items: [
-          "Plastic packaging (bottles, tubs - clean)",
-          "Metal cans/foil (clean)",
-          "Food/drink cartons (rinsed, flattened)",
-        ],
-      },
-      {
-        name: "Hazardous Waste (Farligt Affald)",
-        color: "bg-red-700",
+        name: "Hazardous Waste (Farligt Affald - to recycling centers)",
+        color: "bg-red-600",
         textColor: "text-white",
         description:
-          "Chemicals, paints, electronics, batteries to municipal collection points.",
+          "Chemicals, electronics, batteries to be taken to recycling centers.",
         items: [
           "Batteries",
-          "Electronics (small)",
-          "Light bulbs (energy saving, fluorescent)",
+          "Light bulbs (energy saving)",
           "Paint",
-          "Chemicals",
-          "Spray cans (with contents)",
+          "Electronics (small)",
         ],
       },
     ],
-    notes:
-      "Very high recycling rates, extensive use of waste-to-energy. Sorting systems can have many fractions (up to 10 or more). Deposit System (Pant) for most beverage containers.",
+    generalAdvice: [
+      "Sorting systems vary by municipality (kommune). Many now have multi-compartment bins. Deposit (Pant) on most bottles/cans.",
+    ],
+    source:
+      "Common knowledge, Danish Environmental Protection Agency (Miljøstyrelsen), local municipal waste guides.",
   },
-  // Spain: Color-coded bins for paper, glass, packaging; organic waste separation expanding.
   ES: {
     countryName: "Spain",
     bins: [
       {
-        name: "General Waste/Organic (Contenedor Gris/Marrón - Resto/Orgánico)",
-        color: "bg-gray-500",
+        name: "Resto/Orgánico no reciclable (Grey Bin)",
+        color: "bg-gray-700",
         textColor: "text-white",
         description:
-          "Grey bin for general non-recyclable waste. Brown bin (where available) for organic waste.",
-        items: [
-          "Non-recyclable items (grey bin)",
-          "Food scraps, garden waste (brown bin if present)",
-        ],
-      },
-      {
-        name: "Packaging - Plastics, Cans, Bricks (Contenedor Amarillo - Envases)",
-        color: "bg-yellow-400",
-        description:
-          "Yellow bin for light packaging: plastic containers, metal cans, bricks (Tetrabriks).",
-        items: [
-          "Plastic bottles/containers",
-          "Plastic bags (check local)",
-          "Metal cans (food, drink)",
-          "Aerosols",
-          "Tetrabriks (milk, juice cartons)",
-          "Aluminum foil/trays",
-          "Plastic/metal lids",
-        ],
-      },
-      {
-        name: "Paper/Cardboard (Contenedor Azul - Papel y Cartón)",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description: "Blue bin for clean paper and cardboard.",
-        items: [
-          "Newspapers",
-          "Magazines",
-          "Cardboard boxes (flattened)",
-          "Paper bags",
-          "Books",
-        ],
-      },
-      {
-        name: "Glass (Contenedor Verde - Vidrio)",
-        color: "bg-green-500",
-        textColor: "text-white",
-        description:
-          "Green igloo-shaped bin for glass bottles and jars (no lids, corks, or ceramics).",
-        items: [
-          "Glass bottles (wine, beer, water)",
-          "Glass jars (food, cosmetics)",
-        ],
-      },
-      {
-        name: "Special Collection Points (Punto Limpio/Ecoparque)",
-        color: "bg-purple-600",
-        textColor: "text-white",
-        description:
-          "For bulky items, electronics, batteries, hazardous waste, cooking oil.",
-        items: [
-          "Furniture",
-          "Appliances",
-          "Electronics",
-          "Batteries",
-          "Paint",
-          "Chemicals",
-          "Used cooking oil",
-        ],
-      },
-    ],
-    notes:
-      "Varies regionally, but generally uses color-coded communal bins. Brown bin for organics is becoming more common. 'Punto Limpio' for special wastes.",
-  },
-  // Brazil: Growing recycling infrastructure, often relies on waste picker cooperatives.
-  BR: {
-    countryName: "Brazil",
-    bins: [
-      {
-        name: "Lixo Comum (General Waste)",
-        color: "bg-black",
-        textColor: "text-white",
-        description: "Non-recyclable waste.",
+          "General non-recyclable waste. If no separate organic bin, organic waste goes here too.",
         items: [
           "Non-recyclable items",
-          "Food-soiled paper",
           "Nappies",
           "Ceramics",
-          "Polystyrene",
+          "Dust",
+          "Food scraps (if no brown bin)",
         ],
       },
       {
-        name: "Recicláveis (Recyclables)",
-        color: "bg-blue-500",
-        textColor: "text-white",
+        name: "Envases (Yellow Bin - Packaging)",
+        color: "bg-yellow-400",
+        textColor: "text-black",
         description:
-          "Recyclable materials: paper, cardboard, plastics, metals. Check local guidelines.",
+          "Plastic containers, cans (metal), and cartons (Tetra Pak).",
         items: [
-          "Paper (newspapers, magazines)",
-          "Cardboard (flattened)",
           "Plastic bottles/containers (rinsed)",
           "Metal cans (rinsed)",
+          "Aerosols (empty)",
+          "Drink cartons (Tetra Pak)",
+          "Plastic lids/caps",
+          "Clean aluminum foil/trays",
         ],
       },
       {
-        name: "Orgânicos (Organic Waste)",
-        color: "bg-green-600",
+        name: "Papel y Cartón (Blue Bin - Paper/Cardboard)",
+        color: "bg-blue-500",
         textColor: "text-white",
-        description: "Organic waste for composting.",
+        description: "Paper and cardboard.",
+        items: [
+          "Newspapers",
+          "Cardboard boxes (flattened)",
+          "Magazines",
+          "Paper bags",
+          "Paper egg cartons",
+        ],
+      },
+      {
+        name: "Vidrio (Green Igloo-shaped Bin - Glass)",
+        color: "bg-green-500",
+        textColor: "text-white",
+        description: "Glass bottles and jars.",
+        items: [
+          "Glass bottles (all colors)",
+          "Glass jars (no lids, no crystal/ceramics)",
+        ],
+      },
+      {
+        name: "Orgánico (Brown Bin - Organic, if available)",
+        color: "bg-stone-600",
+        textColor: "text-white",
+        description: "Food scraps and small plant waste.",
         items: [
           "Fruit/vegetable scraps",
+          "Meat/fish remains",
+          "Eggshells",
           "Coffee grounds",
           "Tea bags",
-          "Garden waste",
-        ],
-      },
-      {
-        name: "Perigosos (Hazardous Waste)",
-        color: "bg-red-600",
-        textColor: "text-white",
-        description:
-          "Hazardous materials like batteries, electronics, and chemicals.",
-        items: [
-          "Batteries",
-          "Electronics",
-          "Light bulbs",
-          "Chemicals",
-          "Paint",
+          "Small plant trimmings",
         ],
       },
     ],
-    notes:
-      "Recycling systems vary widely. In many areas, waste pickers play a crucial role in recycling. Check local guidelines.",
+    generalAdvice: [
+      "Color-coded communal bins are standard. Organic collection (brown bin) is becoming more common. Rules can vary slightly by region/municipality.",
+    ],
+    source:
+      "Common knowledge, Ecoembes (Spanish packaging recovery organization), Spanish Ministry for Ecological Transition.",
   },
-  // India: Waste management challenges, informal sector plays a large role, formal systems developing.
-  IN: {
-    countryName: "India",
+  // US is already defined, ensure it's up-to-date or merge if necessary.
+  // For this update, I'm assuming the user wants to replace the existing US entry if it was minimal
+  // or ensure the new detailed one is used. Given the prompt structure, it implies a full replacement/addition.
+  US: {
+    countryName: "United States",
     bins: [
       {
-        name: "General Waste (Dry Waste)",
-        color: "bg-black",
+        name: "Trash/Landfill",
+        color: "bg-neutral-700",
         textColor: "text-white",
-        description:
-          "Non-recyclable waste, including dry items like plastic, metal, and glass.",
+        description: "General non-recyclable, non-compostable household waste.",
         items: [
-          "Non-recyclable items",
-          "Plastic bags/film",
-          "Polystyrene",
-          "Broken glass (wrapped)",
+          "Plastic bags/film (check local, some store drop-offs)",
+          "Styrofoam",
+          "Food-soiled paper (unless compostable and accepted)",
+          "Broken ceramics/glassware (check local rules for safety, often trash)",
+          "Chip bags",
+          "Candy wrappers",
+          "Non-recyclable plastics (e.g. #3, #4, #6, #7 in many areas)",
         ],
       },
       {
-        name: "Wet Waste (Organic Waste)",
-        color: "bg-green-600",
+        name: "Recycling (Single-Stream or Separated)",
+        color: "bg-sky-600",
         textColor: "text-white",
         description:
-          "Organic waste like food scraps and garden waste. Usually collected separately.",
+          "Recyclable materials. Rules vary widely (e.g., paper, cardboard, plastic containers #1 & #2, metal cans, glass). ALWAYS CHECK LOCAL GUIDELINES.",
         items: [
-          "Food scraps (all types)",
-          "Garden waste",
-          "Coffee grounds",
-          "Tea bags",
+          "Paper (clean, dry - newspapers, mail, magazines)",
+          "Cardboard (flattened, clean, dry)",
+          "Plastic bottles/jugs/tubs (empty, rinsed, lids on/off varies - typically #1 & #2, sometimes #5)",
+          "Metal cans (empty, rinsed - aluminum and steel)",
+          "Glass bottles/jars (empty, rinsed, lids off - sometimes separate or not accepted)",
         ],
       },
       {
-        name: "Recyclable Waste (Dry Recyclables)",
-        color: "bg-blue-500",
+        name: "Organics/Compost (If available)",
+        color: "bg-emerald-600",
         textColor: "text-white",
         description:
-          "Recyclable materials: paper, cardboard, plastics, metals. Check local guidelines.",
+          "Food scraps and yard waste. Availability and accepted items vary significantly by municipality.",
         items: [
-          "Paper (newspapers, magazines)",
-          "Cardboard (flattened)",
-          "Plastic bottles/containers (rinsed)",
-          "Metal cans (rinsed)",
-        ],
-      },
-      {
-        name: "Hazardous Waste",
-        color: "bg-red-700",
-        textColor: "text-white",
-        description:
-          "Hazardous materials like batteries, electronics, and chemicals.",
-        items: [
-          "Batteries",
-          "Electronics",
-          "Light bulbs",
-          "Chemicals",
-          "Paint",
+          "Fruit/vegetable scraps",
+          "Yard trimmings (leaves, grass, small branches - check local)",
+          "Coffee grounds/filters (paper only)",
+          "Tea bags (paper only, no staples)",
+          "Eggshells",
+          "Food-soiled paper (if specifically accepted locally, e.g. uncoated paper napkins)",
         ],
       },
     ],
     notes:
-      "Informal sector plays a significant role in waste management. Check local guidelines for segregation and disposal.",
+      "Waste management is highly localized. There is no national standard. ALWAYS check with your local city or county waste management service for specific rules. 'Wishcycling' (putting non-recyclables in recycling) contaminates loads.",
+    source: "General knowledge, EPA, local municipal waste websites.",
   },
-  // China: Rapidly developing waste management, promoting sorting in major cities.
-  CN: {
-    countryName: "China",
-    bins: [
-      {
-        name: "干垃圾 (Dry Waste)",
-        color: "bg-black",
-        textColor: "text-white",
-        description:
-          "Non-recyclable waste, including items like plastic, metal, and glass.",
-        items: [
-          "Non-recyclable items",
-          "Plastic bags/film",
-          "Polystyrene",
-          "Broken glass (wrapped)",
-        ],
-      },
-      {
-        name: "湿垃圾 (Wet Waste)",
-        color: "bg-green-600",
-        textColor: "text-white",
-        description:
-          "Organic waste like food scraps and garden waste. Usually collected separately.",
-        items: [
-          "Food scraps (all types)",
-          "Garden waste",
-          "Coffee grounds",
-          "Tea bags",
-        ],
-      },
-      {
-        name: "可回收物 (Recyclable Waste)",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description:
-          "Recyclable materials: paper, cardboard, plastics, metals. Check local guidelines.",
-        items: [
-          "Paper (newspapers, magazines)",
-          "Cardboard (flattened)",
-          "Plastic bottles/containers (rinsed)",
-          "Metal cans (rinsed)",
-        ],
-      },
-      {
-        name: "有害垃圾 (Hazardous Waste)",
-        color: "bg-red-700",
-        textColor: "text-white",
-        description:
-          "Hazardous materials like batteries, electronics, and chemicals.",
-        items: [
-          "Batteries",
-          "Electronics",
-          "Light bulbs",
-          "Chemicals",
-          "Paint",
-        ],
-      },
-    ],
-    notes:
-      "Waste sorting is mandatory in many cities. Check local regulations for specific sorting and disposal guidelines.",
-  },
-  // South Africa: Developing formal recycling, focus on job creation in waste sector.
-  ZA: {
-    countryName: "South Africa",
-    bins: [
-      {
-        name: "General Waste (Black Bag)",
-        color: "bg-black",
-        textColor: "text-white",
-        description:
-          "Non-recyclable waste, typically in black bags. Includes items like food waste, nappies, and other non-recyclables.",
-        items: [
-          "Non-recyclable items",
-          "Food waste",
-          "Nappies",
-          "Broken glass (wrapped)",
-        ],
-      },
-      {
-        name: "Recyclable Waste (Blue Bag)",
-        color: "bg-blue-500",
-        textColor: "text-white",
-        description:
-          "Recyclable materials: paper, cardboard, plastics, metals. Usually in blue bags.",
-        items: [
-          "Paper (newspapers, magazines)",
-          "Cardboard (flattened)",
-          "Plastic bottles/containers (rinsed)",
-          "Metal cans (rinsed)",
-        ],
-      },
-      {
-        name: "Garden Refuse (Green Waste)",
-        color: "bg-green-600",
-        textColor: "text-white",
-        description:
-          "Garden waste like grass, leaves, and branches. Often collected separately.",
-        items: ["Garden waste", "Grass clippings", "Leaves", "Small branches"],
-      },
-      {
-        name: "Hazardous Waste",
-        color: "bg-red-700",
-        textColor: "text-white",
-        description:
-          "Hazardous materials like batteries, electronics, and chemicals.",
-        items: [
-          "Batteries",
-          "Electronics",
-          "Light bulbs",
-          "Chemicals",
-          "Paint",
-        ],
-      },
-    ],
-    notes:
-      "Recycling systems are developing. Check local guidelines for separation and disposal.",
-  },
+  // Ensure no trailing comma after the last country object if it's the absolute end of the main object.
 };
 
 // Maps Teachable Machine prediction classes to common bin/material types and advice
@@ -1551,11 +1450,31 @@ const classToBinMapping: Record<
   { binNameKeywords: string[]; advice?: string }
 > = {
   Paper: {
-    binNameKeywords: ["paper", "papiertonne", "papier", "papel", "carta"],
+    binNameKeywords: [
+      "paper",
+      "papiertonne",
+      "papier",
+      "papel",
+      "carta",
+      "blue bin",
+      "recycling",
+      "recyclables",
+      "paper packaging", // Added
+    ],
     advice: "Ensure it's clean and dry. Remove any plastic wrapping.",
   },
   Cardboard: {
-    binNameKeywords: ["cardboard", "karton", "pappe", "cartone", "cartón"],
+    binNameKeywords: [
+      "cardboard",
+      "karton",
+      "pappe",
+      "cartone",
+      "cartón",
+      "blue bin",
+      "recycling",
+      "recyclables",
+      "paper packaging", // Added
+    ],
     advice: "Flatten boxes to save space. Remove tape if possible.",
   },
   Plastic: {
@@ -1571,12 +1490,29 @@ const classToBinMapping: Record<
       "pmd",
       "envases",
       "leichtverpackungen",
+      "yellow bin",
+      "blue bin",
+      "recycling",
+      "recyclables",
+      "plastic packaging", // Added
     ],
     advice:
       "Empty, rinse, and remove lids if required locally. Check local guidelines for accepted plastic types/numbers.",
   },
   Glass: {
-    binNameKeywords: ["glass", "verre", "vetro", "glas", "vidrio"],
+    binNameKeywords: [
+      "glass",
+      "verre",
+      "vetro",
+      "glas",
+      "vidrio",
+      "blue bin",
+      "green bin",
+      "recycling",
+      "recyclables",
+      "glascontainer",
+      "glass packaging", // Added
+    ],
     advice:
       "Rinse containers. Remove lids. Some areas require color separation.",
   },
@@ -1590,6 +1526,11 @@ const classToBinMapping: Record<
       "pmd",
       "envases",
       "leichtverpackungen",
+      "yellow bin",
+      "blue bin",
+      "recycling",
+      "recyclables",
+      "metal packaging", // Added
     ],
     advice: "Empty and rinse cans. Be careful of sharp edges.",
   },
@@ -1606,6 +1547,7 @@ const classToBinMapping: Record<
       "gft",
       "matavfall",
       "biojäte",
+      "green bin", // Added
     ],
     advice:
       "No plastic bags (even biodegradable ones) unless specified by local council. Avoid liquids, oils, and large bones unless permitted.",
@@ -1625,6 +1567,9 @@ const classToBinMapping: Record<
       "resto",
       "brännbart",
       "sekajäte",
+      "black bin", // Added
+      "grey bin", // Added
+      "red lid bin", // Added for landfill bins like in AU
     ],
     advice:
       "When in doubt, and it's not hazardous or recyclable, put it here. Avoid putting recyclables or hazardous waste in general trash.",
@@ -1661,272 +1606,425 @@ const classToBinMapping: Record<
   },
 };
 
+// Retrieves bin information for a searched item name and country.
+// TODO: This is a basic implementation. You may need to refine the search logic
+// to better match item names to bin types based on your available data.
+const getBinInfoForItemName = (
+  itemName: string,
+  countryCode: string
+): DisplayableBinInfo | null => {
+  if (!itemName.trim()) {
+    return null;
+  }
+  const itemLower = itemName.toLowerCase().trim();
+
+  // Attempt to map search query to a known class directly or by keyword
+  for (const className in classToBinMapping) {
+    if (itemLower.includes(className.toLowerCase())) {
+      // If item name contains a class name (e.g., "plastic bottle" contains "plastic")
+      return getBinForPrediction(className, countryCode);
+    }
+    const mapping = classToBinMapping[className];
+    if (
+      mapping.binNameKeywords.some((keyword) =>
+        itemLower.includes(keyword.toLowerCase())
+      )
+    ) {
+      // If item name contains a keyword associated with a class
+      return getBinForPrediction(className, countryCode);
+    }
+  }
+
+  // Fallback: More generic search against bin names in countrySpecificBinInfo might be needed here
+  // For now, if no direct class mapping, return null.
+  // You might want to iterate through countrySpecificBinInfo[countryCode].bins
+  // and match itemName against bin.name or keywords.
+  console.warn(
+    `getBinInfoForItemName: No direct class mapping found for "${itemName}". Further search logic may be needed.`
+  );
+  return null;
+};
+
 // Retrieves bin information for the currently selected country.
 const getBinForPrediction = (
   predictionClass: string,
   countryCode: string
-): BinInfo & { advice?: string } => {
-  const countryData = countrySpecificBinInfo[countryCode];
-  const defaultBinInfo = {
-    name: "Check Locally",
-    description: "Please check local municipal guidelines for this item.",
-    color: "bg-gray-400",
-    textColor: "text-white",
-    items: [predictionClass],
-    advice: "Local rules are key!",
+): DisplayableBinInfo => {
+  const currentCountryInfo = countrySpecificBinInfo[countryCode];
+  const fallbackBin: DisplayableBinInfo = {
+    name:
+      currentCountryInfo?.bins.find(
+        (bin) =>
+          bin.name.toLowerCase().includes("trash") ||
+          bin.name.toLowerCase().includes("general") ||
+          bin.name.toLowerCase().includes("restmüll")
+      )?.name || "General Waste",
+    color:
+      currentCountryInfo?.bins.find(
+        (bin) =>
+          bin.name.toLowerCase().includes("trash") ||
+          bin.name.toLowerCase().includes("general") ||
+          bin.name.toLowerCase().includes("restmüll")
+      )?.color || "bg-gray-500",
+    textColor:
+      currentCountryInfo?.bins.find(
+        (bin) =>
+          bin.name.toLowerCase().includes("trash") ||
+          bin.name.toLowerCase().includes("general") ||
+          bin.name.toLowerCase().includes("restmüll")
+      )?.textColor || "text-white",
+    items: [],
+    description: "No specific bin found. Please check local guidelines.",
+    advice: "Please check local regulations for this item.",
   };
 
-  if (!countryData) {
+  if (!currentCountryInfo) {
     return {
-      ...defaultBinInfo,
-      name: "Info Not Found",
-      description: `Country data missing for ${countryCode}.`,
+      ...fallbackBin,
+      advice: "Country-specific information not available.",
     };
   }
 
-  const mappedInfo = classToBinMapping[predictionClass];
-  let targetBin: (BinInfo & { advice?: string }) | undefined = undefined;
-
-  if (mappedInfo) {
-    for (const bin of countryData.bins) {
-      const binNameLower = bin.name.toLowerCase();
-      const binDescLower = bin.description.toLowerCase();
-
-      if (
-        mappedInfo.binNameKeywords.some(
-          (keyword) =>
-            binNameLower.includes(keyword) || binDescLower.includes(keyword)
-        )
-      ) {
-        targetBin = { ...bin, advice: mappedInfo.advice };
-        break;
-      }
+  const mapping = classToBinMapping[predictionClass];
+  if (!mapping) {
+    // If the predictionClass itself is not in classToBinMapping, try a generic "Trash"
+    const trashMapping = classToBinMapping["Trash"];
+    const generalWasteBin = currentCountryInfo.bins.find((bin: Bin) =>
+      trashMapping.binNameKeywords.some((keyword) =>
+        bin.name.toLowerCase().includes(keyword.toLowerCase())
+      )
+    );
+    if (generalWasteBin) {
+      return {
+        ...generalWasteBin,
+        advice:
+          trashMapping.advice ||
+          "Item not specifically recognized, dispose of as general waste if not recyclable/hazardous.",
+      };
     }
+    return {
+      // Ultimate fallback if even general trash isn't found by keywords
+      ...fallbackBin,
+      advice:
+        "Item not recognized for specific binning. Check local guidelines.",
+    };
   }
 
-  // If a specific bin is found through keywords
-  if (targetBin) {
-    return targetBin;
+  const foundBin = currentCountryInfo.bins.find((bin: Bin) =>
+    mapping.binNameKeywords.some((keyword) =>
+      bin.name.toLowerCase().includes(keyword.toLowerCase())
+    )
+  );
+
+  if (foundBin) {
+    return {
+      ...foundBin,
+      advice:
+        mapping.advice ||
+        foundBin.instructions ||
+        foundBin.description ||
+        "Follow bin guidelines.",
+    };
   }
 
-  // Fallback for Battery/E-waste if not found by primary keywords, try more generic hazardous/special waste bins
-  if (predictionClass === "Battery" || predictionClass === "Ewaste") {
-    const specialWasteKeywords = [
-      "special",
-      "hazardous",
-      "e-waste",
-      "electronics",
-      "battery",
-      "batteries",
-      "déchetterie",
-      "punto limpio",
-      "hwrc",
-      "transfer station",
-      "recycling centre",
-    ];
-    for (const bin of countryData.bins) {
-      const binNameLower = bin.name.toLowerCase();
-      const binDescLower = bin.description.toLowerCase();
-      if (
-        specialWasteKeywords.some(
-          (keyword) =>
-            binNameLower.includes(keyword) || binDescLower.includes(keyword)
-        )
-      ) {
-        return {
-          ...bin,
-          advice:
-            mappedInfo?.advice ||
-            "Take to designated collection points for hazardous/electronic waste.",
-        };
-      }
-    }
-  }
-
-  // Fallback: If no specific bin found, default to the primary "General Waste" bin of the country
-  const generalWasteKeywords = [
-    "general waste",
-    "residual waste",
-    "restmüll",
-    "trash",
-    "garbage",
-    "mixed waste",
-    "indifferenziato",
-    "secco",
-    "restafval",
-    "ordures ménagères",
-    "resto",
-    "brännbart",
-    "sekajäte",
-    "landfill",
-    "refuse",
-  ];
-  for (const bin of countryData.bins) {
-    const binNameLower = bin.name.toLowerCase();
-    // Prioritize bins explicitly named "General Waste" or similar primary terms
+  // Fallback: if no specific bin is found by keywords in bin names,
+  // check if the predictionClass (e.g., "Paper") is mentioned in any bin's items list.
+  for (const bin of currentCountryInfo.bins) {
     if (
-      generalWasteKeywords.some(
-        (keyword) =>
-          binNameLower.startsWith(keyword) || bin.name.toLowerCase() === keyword
+      bin.items.some(
+        (item: string) =>
+          item.toLowerCase().includes(predictionClass.toLowerCase()) // Changed from === to includes
       )
     ) {
       return {
         ...bin,
-        advice: `Item '${predictionClass}' not specifically matched. If not recyclable or hazardous, it likely goes here. Please verify locally.`,
-      };
-    }
-  }
-  // Broader search if strict general waste not found
-  for (const bin of countryData.bins) {
-    const binNameLower = bin.name.toLowerCase();
-    const binDescLower = bin.description.toLowerCase();
-    if (
-      generalWasteKeywords.some(
-        (keyword) =>
-          binNameLower.includes(keyword) || binDescLower.includes(keyword)
-      )
-    ) {
-      return {
-        ...bin,
-        advice: `Item '${predictionClass}' not specifically matched. If not recyclable or hazardous, it likely goes here. Please verify locally.`,
+        advice:
+          mapping.advice ||
+          bin.instructions ||
+          bin.description ||
+          "Follow bin guidelines.",
       };
     }
   }
 
-  // Absolute fallback if no general waste bin is identified by keywords
+  // If still not found, try to find the most appropriate general waste bin for the country
+  const trashMapping = classToBinMapping["Trash"];
+  const generalWasteBin = currentCountryInfo.bins.find((bin: Bin) =>
+    trashMapping.binNameKeywords.some((keyword) =>
+      bin.name.toLowerCase().includes(keyword.toLowerCase())
+    )
+  );
+  if (generalWasteBin) {
+    return {
+      ...generalWasteBin,
+      advice:
+        mapping.advice ||
+        trashMapping.advice ||
+        "Considered general waste. Please verify locally if unsure.",
+    };
+  }
+
   return {
-    ...defaultBinInfo,
-    description: `Could not determine the correct bin for '${predictionClass}' in ${countryData.countryName}. Please check local guidelines.`,
+    // Final fallback to a generic definition of general waste
+    ...fallbackBin,
+    advice:
+      mapping.advice ||
+      currentCountryInfo.generalAdvice?.join(" ") ||
+      fallbackBin.advice,
   };
 };
 
-// List of supported country codes for the dropdown.
-const supportedCountries = Object.keys(countrySpecificBinInfo);
-
-// Sort countries alphabetically, but keep US at the top
-const sortedCountries = supportedCountries.sort((a, b) => {
-  if (a === "US") return -1;
+const sortedCountries = Object.keys(countrySpecificBinInfo).sort((a, b) => {
+  if (a === "US") return -1; // Always sort "US" to the top
   if (b === "US") return 1;
   return countrySpecificBinInfo[a].countryName.localeCompare(
     countrySpecificBinInfo[b].countryName
   );
 });
 
-// Main page component for the trash sorter application.
-export default function Home() {
-  // State for the currently selected country code.
-  const [selectedCountry, setSelectedCountry] = useState<string>("US"); // Default to United States.
-  // State for the prediction result from Teachable Machine.
+// Main component for the Trash Sorter application page.
+export default function TrashSorterPage() {
+  const [selectedCountry, setSelectedCountry] = useState<string>("US");
+  const [currentCountryData, setCurrentCountryData] =
+    useState<CountryBinInfo | null>(null);
   const [predictionResult, setPredictionResult] = useState<string | null>(null);
-  // State for the suggested bin information.
-  const [suggestedBin, setSuggestedBin] = useState<
-    (BinInfo & { advice?: string }) | null
+  const [suggestedBin, setSuggestedBin] = useState<DisplayableBinInfo | null>(
+    null
+  );
+  const [searchQuery, setSearchQuery] = useState("");
+  const [displayedBinInfo, setDisplayedBinInfo] =
+    useState<DisplayableBinInfo | null>(null);
+  const [recommendationTitle, setRecommendationTitle] = useState<string>(
+    "Scan or search an item to see recommendations."
+  );
+  const [isScannerModalOpen, setIsScannerModalOpen] = useState(false);
+  const [actionPriority, setActionPriority] = useState<
+    "scan" | "search" | null
   >(null);
+  const [showScanner, setShowScanner] = useState(false);
+  const [isCameraActive, setIsCameraActive] = useState(false);
 
-  // URL for your Teachable Machine model.
-  // Ensure this is the full URL to the `model.json` file hosted by Teachable Machine.
-  const modelUrl = "https://teachablemachine.withgoogle.com/models/xBp9J61Qn/"; // Updated model URL
+  useEffect(() => {
+    setCurrentCountryData(countrySpecificBinInfo[selectedCountry]);
+    setPredictionResult(null);
+    setSuggestedBin(null);
+    // setSearchQuery("");
+    setDisplayedBinInfo(null);
+    setRecommendationTitle("Scan or search an item to see recommendations.");
+    setActionPriority(null);
+  }, [selectedCountry]);
 
-  // Retrieves bin information for the currently selected country.
-  const currentBinInfo = countrySpecificBinInfo[selectedCountry];
+  const handleCountryChange = (event: React.ChangeEvent<HTMLSelectElement>) => {
+    setSelectedCountry(event.target.value);
+  };
 
-  // Handler for when a prediction is made by the Teachable Machine.
+  const toggleScanner = () => {
+    const willOpen = !showScanner;
+    setShowScanner(willOpen);
+    setIsScannerModalOpen(willOpen); // Sync with the modal state
+    if (willOpen) {
+      setIsCameraActive(true); // Activate camera when opening scanner
+      // If opening scanner, and search was active, scan should take priority
+      // but handlePrediction will set it once a prediction comes in.
+      // If there's no active search, we don't need to change priority yet.
+    } else {
+      setIsCameraActive(false); // Deactivate camera when closing
+      handlePrediction(null); // Clear prediction when scanner is manually closed
+    }
+  };
+
+  // IMPORTANT: Replace with your actual Teachable Machine model URL
+  const modelUrl = "https://teachablemachine.withgoogle.com/models/xBp9J61Qn/";
+
+  // Callback function passed to TeachableMachineClient to handle prediction results.
+  // It updates the prediction state.
   const handlePrediction = useCallback(
-    (className: string, countryCode: string) => {
-      setPredictionResult(`Predicted: ${className}`);
-      const bin = getBinForPrediction(className, countryCode);
-      setSuggestedBin(bin);
+    (prediction: string | null) => {
+      setPredictionResult(prediction);
+      if (prediction) {
+        const binInfo = getBinForPrediction(prediction, selectedCountry);
+        setSuggestedBin(binInfo);
+        setActionPriority("scan");
+      } else {
+        setSuggestedBin(null);
+        if (actionPriority === "scan") {
+          if (searchQuery.trim()) {
+            setActionPriority("search");
+          } else {
+            setActionPriority(null);
+          }
+        }
+      }
     },
-    [setPredictionResult, setSuggestedBin]
-  ); // getBinForPrediction is stable and defined outside
+    [selectedCountry, searchQuery, actionPriority] // actionPriority is needed here
+  );
 
+  const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const query = event.target.value;
+    setSearchQuery(query);
+    if (query.trim()) {
+      setActionPriority("search");
+    } else {
+      if (actionPriority === "search") {
+        if (suggestedBin && predictionResult) {
+          setActionPriority("scan");
+        } else {
+          setActionPriority(null);
+        }
+      }
+    }
+  };
+
+  // Effect to update displayedBinInfo and recommendationTitle based on the latest action
+  useEffect(() => {
+    if (actionPriority === "search") {
+      if (searchQuery.trim()) {
+        const searchBinInfo = getBinInfoForItemName(
+          searchQuery,
+          selectedCountry
+        );
+        setDisplayedBinInfo(searchBinInfo);
+        setRecommendationTitle(
+          searchBinInfo
+            ? `Recommendation for "${searchQuery}"`
+            : `No specific bin found for "${searchQuery}". Try general categories.`
+        );
+      } else {
+        if (suggestedBin && predictionResult) {
+          setDisplayedBinInfo(suggestedBin);
+          setRecommendationTitle(
+            `Recommendation for scanned item: ${predictionResult}`
+          );
+          // No need to setActionPriority here, handled by handleSearchChange
+        } else {
+          setDisplayedBinInfo(null);
+          setRecommendationTitle(
+            "Scan or search an item to see recommendations."
+          );
+        }
+      }
+    } else if (actionPriority === "scan") {
+      if (suggestedBin && predictionResult) {
+        setDisplayedBinInfo(suggestedBin);
+        setRecommendationTitle(
+          `Recommendation for scanned item: ${predictionResult}`
+        );
+      } else {
+        if (searchQuery.trim()) {
+          const searchBinInfo = getBinInfoForItemName(
+            searchQuery,
+            selectedCountry
+          );
+          setDisplayedBinInfo(searchBinInfo);
+          setRecommendationTitle(
+            searchBinInfo
+              ? `Recommendation for "${searchQuery}"`
+              : `No specific bin found for "${searchQuery}". Try general categories.`
+          );
+          // No need to setActionPriority here, handled by handlePrediction
+        } else {
+          setDisplayedBinInfo(null);
+          setRecommendationTitle(
+            "Scan or search an item to see recommendations."
+          );
+        }
+      }
+    } else {
+      setDisplayedBinInfo(null);
+      setRecommendationTitle("Scan or search an item to see recommendations.");
+    }
+  }, [
+    actionPriority,
+    searchQuery,
+    suggestedBin,
+    selectedCountry,
+    predictionResult,
+  ]);
+
+  // This useEffect handles the case where the TeachableMachineClient modal might be closed
+  // by its internal close button, rather than our toggleScanner function.
+  useEffect(() => {
+    if (!isScannerModalOpen && showScanner) {
+      // If the modal state (isScannerModalOpen) becomes false
+      // while our component thinks the scanner should be shown (showScanner is true),
+      // it means the modal was closed externally (e.g., by its own close button).
+      setShowScanner(false); // Sync our state
+      setIsCameraActive(false);
+      handlePrediction(null); // Clear prediction
+    }
+  }, [isScannerModalOpen, showScanner, handlePrediction]);
+
+  // JSX for the search input
+  // <input type="text" value={searchQuery} onChange={handleSearchChange} placeholder="Search for an item..." />
+
+  // JSX for opening the scanner modal
+  // <button onClick={() => setIsScannerModalOpen(true)}>Scan Item</button>
+
+  // JSX for TeachableMachineClient
+  /*
+  {isScannerModalOpen && (
+    <TeachableMachineClient
+      onPrediction={handlePrediction}
+      onClose={() => {
+        setIsScannerModalOpen(false);
+        // handlePrediction(null); // Already handled by the new useEffect above
+      }}
+    />
+  )}
+  */
+
+  // JSX for displaying the recommendation
+  /*
+  <div>
+    <h2>{recommendationTitle}</h2>
+    {displayedBinInfo && (
+      <div>
+        <h3>{displayedBinInfo.name}</h3>
+        <p>{displayedBinInfo.description}</p>
+        {displayedBinInfo.advice && <p><strong>Advice:</strong> {displayedBinInfo.advice}</p>}
+      </div>
+    )}
+  </div>
+  */
   return (
-    <main className="flex flex-col min-h-screen bg-pale-leaf font-sans items-center text-forest-green p-4 md:p-8">
-      <div className="w-full max-w-6xl mx-auto mt-8 space-y-12">
-        {/* Header section */}
-        <header className="text-center space-y-4">
-          <h1 className="text-5xl md:text-6xl font-serif text-pine-green font-bold">
-            Verda Trash Sorter
-          </h1>
-          <p className="text-lg md:text-xl text-bark-brown max-w-2xl mx-auto">
-            Confused about where your trash goes? Select your country and use
-            our AI-powered sorter to learn how to recycle right and reduce your
-            environmental impact.
-          </p>
-        </header>
-
-        {/* Teachable Machine client section */}
-        <section
-          id="trash-sorter"
-          className="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-xl shadow-2xl hover:shadow-pine-green/30 transition-shadow duration-300"
-        >
-          <h2 className="text-3xl md:text-4xl font-serif text-pine-green mb-6 text-center">
-            What item are you sorting?
-          </h2>
-          {/* Teachable Machine Client */}
-          <div className="bg-white p-6 rounded-xl shadow-2xl">
-            <TeachableMachineClient
-              modelUrl={modelUrl}
-              onPrediction={handlePrediction}
-              selectedCountry={selectedCountry} // Pass selectedCountry to TeachableMachineClient
-            />
-            <p className="text-xs text-gray-600 mt-2 text-center">
-              For best accuracy, please use a solid white, black, or grey
-              background.
+    <main className="min-h-screen bg-gradient-to-br from-emerald-50 via-teal-100 to-sky-200 p-4 sm:p-8 font-sans text-gray-800">
+      <div className="container mx-auto max-w-6xl">
+        {" "}
+        {/* Increased max-width for a more spacious feel */}
+        {/* Header Section */}
+        <header className="mb-12 text-center py-8 rounded-xl bg-white/80 backdrop-blur-lg shadow-2xl">
+          {" "}
+          {/* Enhanced header styling */}
+          <div className="inline-block p-4">
+            <h1 className="text-6xl font-bold text-verda-green tracking-tight fancy-font">
+              {" "}
+              {/* Increased font size */}
+              VerdaVision Waste Sorter
+            </h1>
+            <p className="mt-4 text-xl text-gray-700">
+              {" "}
+              {/* Increased font size and adjusted margin */}
+              Your smart guide to recycling and waste disposal.
             </p>
-            {/* Country Selector */}
-            <div className="mt-4">
-              {/* Display prediction result */}
-              {predictionResult && (
-                <div className="mt-4 text-center p-4 bg-leaf-green/50 rounded-md">
-                  <p className="text-lg text-pine-green font-semibold">
-                    {predictionResult}
-                  </p>
-                </div>
-              )}
-              {/* Display suggested bin */}
-              {suggestedBin && (
-                <div
-                  className={`mt-4 p-4 rounded-lg shadow-md ${
-                    suggestedBin.color
-                  } ${suggestedBin.textColor || "text-gray-900"}`}
-                >
-                  <h4 className="text-xl font-bold mb-2 font-serif">
-                    Suggested Bin: {suggestedBin.name}
-                  </h4>
-                  <p className="text-sm mb-1">{suggestedBin.description}</p>
-                  {suggestedBin.advice && (
-                    <p className="text-sm font-semibold mt-2">
-                      Advice: {suggestedBin.advice}
-                    </p>
-                  )}
-                </div>
-              )}
-            </div>
           </div>
-        </section>
-
-        {/* Country selection and bin information section */}
-        <section
-          id="bin-info"
-          className="bg-white/80 backdrop-blur-sm p-6 md:p-8 rounded-xl shadow-2xl hover:shadow-pine-green/30 transition-shadow duration-300"
-        >
-          <h2 className="text-3xl md:text-4xl font-serif text-pine-green mb-6 text-center">
-            Recycling & Waste Bins in Your Area
+        </header>
+        {/* Country Selector Section */}
+        <section className="mb-12 p-8 bg-white/70 backdrop-blur-lg rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+          {" "}
+          {/* Increased padding */}
+          <h2 className="text-4xl font-semibold text-verda-green mb-6 text-center fancy-font">
+            {" "}
+            {/* Increased font size and margin */}
+            Select Your Region
           </h2>
-          {/* Country selector dropdown */}
-          <div className="mb-8 text-center">
-            <label
-              htmlFor="country-select"
-              className="block text-lg font-medium text-bark-brown mb-2"
-            >
-              Select your country:
-            </label>
+          <div className="flex justify-center max-w-md mx-auto">
+            {" "}
+            {/* Centered and max-width for select */}
             <select
               id="country-select"
-              value={selectedCountry}
-              onChange={(e) => setSelectedCountry(e.target.value)}
-              className="mt-1 block w-full max-w-md mx-auto pl-3 pr-10 py-2 text-base border-stone-gray focus:outline-none focus:ring-pine-green focus:border-pine-green sm:text-sm rounded-md shadow-sm bg-white border"
+              value={selectedCountry} // Already string, no `|| ""` needed
+              onChange={handleCountryChange}
+              className="w-full p-4 border-2 border-gray-300 rounded-lg shadow-md focus:ring-2 focus:ring-verda-green focus:border-verda-green text-lg transition-all duration-200 hover:border-emerald-400" /* Enhanced select style */
             >
               {sortedCountries.map((countryCode) => (
                 <option key={countryCode} value={countryCode}>
@@ -1935,71 +2033,272 @@ export default function Home() {
               ))}
             </select>
           </div>
-
-          {/* Display bin information for the selected country */}
-          {currentBinInfo && (
-            <div className="space-y-6">
-              <h3 className="text-2xl md:text-3xl font-serif text-pine-green mb-4 text-center">
-                {currentBinInfo.countryName}
-              </h3>
-              {currentBinInfo.notes && (
-                <p className="mb-6 text-md text-bark-brown bg-leaf-green/30 p-4 rounded-lg italic">
-                  <strong>Note:</strong> {currentBinInfo.notes}
-                </p>
-              )}
-              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-                {currentBinInfo.bins.map((bin) => (
-                  <div
-                    key={bin.name}
-                    className={`${bin.color} ${
-                      bin.textColor || "text-gray-900"
-                    } p-6 rounded-lg shadow-lg transition-transform hover:scale-105 duration-300 flex flex-col`}
-                  >
-                    <h4 className="text-xl font-bold mb-2 font-serif">
-                      {bin.name}
-                    </h4>
-                    <p className="text-sm mb-3 flex-grow">{bin.description}</p>
-                    <div>
-                      <p className="text-xs font-semibold mb-1">
-                        Common items:
-                      </p>
-                      <ul className="list-disc list-inside text-xs space-y-1">
-                        {bin.items.map((item) => (
-                          <li key={item}>{item}</li>
-                        ))}
-                      </ul>
+          {currentCountryData?.notes && (
+            <p className="mt-6 text-md text-emerald-800 bg-emerald-100 p-5 rounded-lg border-l-4 border-verda-green italic shadow-sm">
+              {" "}
+              {/* Enhanced notes style */}
+              <strong>Note for {currentCountryData.countryName}:</strong>{" "}
+              {currentCountryData.notes}
+            </p>
+          )}
+        </section>
+        {/* Scanner Toggle and Item Search Section */}
+        <section className="mb-12 p-8 bg-white/70 backdrop-blur-lg rounded-xl shadow-xl hover:shadow-2xl transition-shadow duration-300">
+          {" "}
+          {/* Increased padding */}
+          <div className="grid md:grid-cols-2 gap-10 items-center">
+            {" "}
+            {/* Increased gap */}
+            <div className="text-center md:text-left">
+              <h2 className="text-4xl font-semibold text-verda-green mb-5 fancy-font">
+                {" "}
+                {/* Increased font size and margin */}
+                Identify Your Item
+              </h2>
+              <p className="text-gray-700 mb-6 text-lg">
+                {" "}
+                {/* Increased font size and margin */}
+                Use our AI scanner or search manually to find the right bin.
+              </p>
+              <button
+                onClick={toggleScanner}
+                className="w-full md:w-auto bg-verda-green hover:bg-emerald-700 text-white font-bold py-4 px-10 rounded-lg shadow-lg hover:shadow-xl transition-all duration-300 transform hover:scale-105 text-xl" /* Enhanced button style */
+              >
+                {showScanner ? "Close Scanner" : "Open Item Scanner"}
+              </button>
+            </div>
+            <div>
+              <input
+                type="text"
+                placeholder="E.g., plastic bottle, apple core, newspaper"
+                value={searchQuery}
+                onChange={handleSearchChange}
+                className="w-full p-5 border-2 border-gray-300 rounded-lg shadow-md focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500 transition-all text-lg hover:border-emerald-400" /* Enhanced input style */
+                aria-label="Search for an item"
+              />
+            </div>
+          </div>
+        </section>
+        {/* Scanner Modal */}
+        {showScanner && (
+          <div className="fixed inset-0 bg-black bg-opacity-80 flex items-center justify-center z-50 p-4 backdrop-blur-md">
+            {" "}
+            {/* Darker backdrop, more blur */}
+            <div className="bg-gradient-to-br from-emerald-50 to-sky-100 p-8 rounded-xl shadow-2xl max-w-2xl w-full relative transform transition-all duration-300 scale-100 opacity-100 border-2 border-verda-green flex flex-col md:flex-row gap-6">
+              {" "}
+              {/* Gradient background, border, flex layout for side-by-side view on medium screens */}
+              <button
+                onClick={toggleScanner}
+                className="absolute top-3 right-3 text-gray-600 hover:text-verda-green text-4xl font-bold transition-colors z-10" /* Enhanced close button, ensure it's above other elements */
+                aria-label="Close scanner"
+              >
+                &times;
+              </button>
+              {/* Camera View Section */}
+              <div className="md:w-1/2 w-full">
+                <h3 className="text-3xl font-semibold text-verda-green mb-6 text-center fancy-font">
+                  {" "}
+                  {/* Increased font size and margin */}
+                  Scan Your Item
+                </h3>
+                <div className="max-w-md mx-auto bg-gray-200 rounded-lg overflow-hidden shadow-inner aspect-video flex items-center justify-center border border-gray-300 relative">
+                  {" "}
+                  {/* Added border */}
+                  {isCameraActive && ( // Conditionally render TeachableMachineClient based on isCameraActive
+                    <TeachableMachineClient
+                      onPrediction={handlePrediction}
+                      modelUrl={modelUrl}
+                      selectedCountry={selectedCountry} // Reinstated selectedCountry prop
+                    />
+                  )}
+                  {!isCameraActive && ( // Placeholder when camera is not active
+                    <div className="text-gray-500 text-center p-4">
+                      Camera is off. Click &quot;Open Item Scanner&quot; to
+                      start.
                     </div>
+                  )}
+                </div>
+              </div>
+              {/* Prediction Display Section (within modal) */}
+              <div className="md:w-1/2 w-full flex flex-col justify-center">
+                {predictionResult && displayedBinInfo && (
+                  <div
+                    className={`p-6 rounded-lg shadow-lg transition-all duration-300 ease-in-out ${
+                      displayedBinInfo.color
+                    } ${
+                      displayedBinInfo.textColor || "text-gray-800"
+                    } border border-white/30`}
+                  >
+                    <h4 className="text-2xl font-bold mb-2 fancy-font">
+                      Recommended Bin: {displayedBinInfo.name}
+                    </h4>
+                    <p className="text-md mb-3">
+                      For item: <strong>{predictionResult}</strong> in{" "}
+                      {currentCountryData?.countryName}
+                    </p>
+                    {displayedBinInfo.advice && (
+                      <p className="mb-3 text-sm italic bg-black/10 p-2 rounded-md">
+                        <strong>Tip:</strong> {displayedBinInfo.advice}
+                      </p>
+                    )}
+                    {displayedBinInfo.items &&
+                      displayedBinInfo.items.length > 0 && (
+                        <>
+                          <h5 className="text-lg font-semibold mb-1">
+                            Common Items:
+                          </h5>
+                          <ul className="list-disc list-inside space-y-1 text-sm">
+                            {displayedBinInfo.items
+                              .slice(0, 3)
+                              .map((item: string, index: number) => (
+                                <li key={index}>{item}</li>
+                              ))}
+                            {displayedBinInfo.items.length > 3 && (
+                              <li>...and more</li>
+                            )}
+                          </ul>
+                        </>
+                      )}
                   </div>
-                ))}
+                )}
+                {predictionResult && !displayedBinInfo && (
+                  <p className="mt-5 text-center text-red-700 bg-red-100 p-4 rounded-md border border-red-300 shadow-sm">
+                    {" "}
+                    {/* Enhanced error message style */}
+                    Could not identify a specific bin for &quot;
+                    {predictionResult}
+                    &quot; in {currentCountryData?.countryName}. Please check
+                    the item or try searching manually.
+                  </p>
+                )}
+                {!predictionResult && (
+                  <p className="text-center text-gray-600">
+                    Point your camera at an item.
+                  </p>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+        {/* Display Area for Predicted Bin or Search Results */}
+        <section className="mt-10">
+          {" "}
+          {/* Increased top margin */}
+          {/* Recommended Bin Display (after search or scan) */}
+          {displayedBinInfo && (
+            <div className="mb-12">
+              {" "}
+              {/* Added margin-bottom to separate from all bins list */}
+              <h2 className="text-3xl font-semibold text-verda-green mb-6 text-center fancy-font">
+                {recommendationTitle}
+              </h2>
+              <div
+                className={`p-10 rounded-xl shadow-2xl transition-all duration-500 ease-in-out transform hover:scale-[1.02] hover:shadow-3xl ${
+                  displayedBinInfo.color // Should exist on DisplayableBinInfo via Bin
+                } ${
+                  displayedBinInfo.textColor || "text-gray-800"
+                } border-2 border-white/50`} /* Enhanced display, added border */
+              >
+                <h3 className="text-4xl font-bold mb-4 fancy-font">
+                  {" "}
+                  {/* Increased font size and margin */}
+                  Place in: {displayedBinInfo.name} {/* Should exist */}
+                </h3>
+                <p className="text-xl mb-5">
+                  {displayedBinInfo.description || "No description available."}
+                </p>
+                {displayedBinInfo.advice && (
+                  <p className="mb-5 text-md italic bg-black/10 p-3 rounded-md">
+                    <strong>Quick Tip:</strong> {displayedBinInfo.advice}
+                  </p>
+                )}
+                {displayedBinInfo.items &&
+                  displayedBinInfo.items.length > 0 && (
+                    <>
+                      <h4 className="text-2xl font-semibold mb-3">
+                        Common Items:
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1.5 text-lg">
+                        {" "}
+                        {/* Increased font size and spacing */}
+                        {displayedBinInfo.items.map(
+                          (item: string, index: number) => (
+                            <li key={index}>{item}</li>
+                          )
+                        )}
+                      </ul>
+                    </>
+                  )}
               </div>
             </div>
           )}
-        </section>
-
-        {/* Call to action to visit the Carbon Quiz page */}
-        <section className="text-center py-8">
-          <h2 className="text-3xl md:text-4xl font-serif text-pine-green mb-4">
-            Curious About Your Carbon Footprint?
-          </h2>
-          <p className="text-lg text-bark-brown mb-6 max-w-xl mx-auto">
-            Take our quiz to understand your environmental impact and find ways
-            to live more sustainably.
-          </p>
-          <a
-            href="/carbon-quiz"
-            className="inline-block bg-pine-green text-white font-bold py-3 px-8 rounded-lg text-lg hover:bg-forest-green transition-colors duration-300 shadow-md hover:shadow-lg transform hover:scale-105"
-          >
-            Take the Carbon Quiz
-          </a>
+          {searchQuery &&
+            displayedBinInfo === null &&
+            !showScanner && ( // Only show if not in scanner and no results
+              <div className="mt-10 p-8 bg-white/70 backdrop-blur-lg rounded-xl shadow-xl text-center">
+                {" "}
+                {/* Increased padding and margin */}
+                <p className="text-2xl text-gray-700">
+                  {" "}
+                  {/* Increased font size */}
+                  No specific bin found for &quot;{searchQuery}&quot; in{" "}
+                  {currentCountryData?.countryName}.
+                </p>
+                <p className="text-lg text-gray-600 mt-2">
+                  Please check your spelling or try a broader term.
+                </p>
+              </div>
+            )}
+          {/* Default Display: All Bins for Selected Country */}
+          {currentCountryData && ( // Always show all bins for the selected country
+            <section className="mt-16">
+              {" "}
+              {/* Increased top margin */}
+              <h2 className="text-4xl font-semibold text-verda-green mb-10 text-center fancy-font">
+                {" "}
+                {/* Increased font size and margin */}
+                All Waste Bins in {currentCountryData.countryName}
+              </h2>
+              <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-10">
+                {" "}
+                {/* Increased gap */}
+                {currentCountryData.bins.map(
+                  (
+                    bin: Bin // Explicitly type bin as Bin
+                  ) => (
+                    <div
+                      key={bin.name}
+                      className={`p-8 rounded-xl shadow-xl hover:shadow-2xl transition-all duration-300 transform hover:-translate-y-2 ${
+                        bin.color
+                      } ${
+                        bin.textColor || "text-gray-800"
+                      } flex flex-col border-2 border-white/50`}
+                    >
+                      <h3 className="text-2xl font-bold mb-4 fancy-font">
+                        {bin.name}
+                      </h3>
+                      <p className="text-md mb-5 flex-grow">
+                        {bin.description || "No description available."}
+                      </p>
+                      <h4 className="text-lg font-semibold mb-3">
+                        Common Items:
+                      </h4>
+                      <ul className="list-disc list-inside space-y-1.5 text-sm">
+                        {bin.items
+                          .slice(0, 3)
+                          .map((item: string, index: number) => (
+                            <li key={index}>{item}</li>
+                          ))}
+                        {bin.items.length > 3 && <li>...and more</li>}
+                      </ul>
+                    </div>
+                  )
+                )}
+              </div>
+            </section>
+          )}
         </section>
       </div>
-
-      {/* Footer with Copyright and Motto */}
-      <footer className="w-full max-w-5xl mt-16 pt-8 border-t border-gray-300 text-center">
-        <p className="text-sm text-gray-600">
-          &copy; {new Date().getFullYear()} Verda. Track More. Waste Less.
-        </p>
-      </footer>
     </main>
   );
 }

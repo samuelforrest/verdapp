@@ -22,6 +22,11 @@ const lora = Lora({
 export const metadata: Metadata = {
   title: "Verda",
   description: "Scan products to find their eco-friendly alternatives!",
+  icons: {
+    icon: "/verda-logo.png", // Default icon
+    shortcut: "/verda-logo.png", // For shortcuts
+    apple: "/verda-logo.png", // For Apple touch icon
+  },
 };
 
 // RootLayout is the main layout component that wraps all pages.

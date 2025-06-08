@@ -18,7 +18,7 @@ const NavigationBar = () => {
 
   // Array of navigation link objects used to build the navigation menu.
   const navLinks: NavLink[] = [
-    { href: "/", label: "Trash Sorter", icon: "/icons/trash-sorter-icon.svg" },
+    { href: "/", label: "Waste Sorter", icon: "/icons/trash-sorter-icon.svg" },
     {
       href: "/carbon-quiz",
       label: "CO2 Calculator",
