@@ -25,6 +25,7 @@ Submission for KTHacks 2025
   * **Google Gemini API**
   * **Google Teachable Machine**
   * **Supabase**
+  * **React**
 
 -----
 
