@@ -1,5 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
-import { GoogleGenAI } from "@google/genai";
+import { GoogleGenAI } from "@google/genai"; // MUST USE NEW GOOGLE GEN AI
+
+// THE FOLLOWING SECTION USED GEMINI TO HELP EXPLAIN HOW TO COMMUNICATE PROPERLY WITH THE GOOGLE GEN AI, and communicate to route.ts, and format JSON data
 
 // Correct: Use a variable name, not the key itself!
 const apiKey = process.env.GEMINI_API_KEY!;

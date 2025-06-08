@@ -380,7 +380,7 @@ type AnalysisResult = {
   recommendations: [string, string, string]; //3 Ai recommendations made to the user for reduction
 };
 
-// THE FOLLOWING SECTION USED GEMINI TO HELP EXPLAIN HOW TO COMMUNICATE PROPERLY WITH THE GOOGLE GEN AI, and communicate to route.ts
+// THE FOLLOWING SECTION USED GEMINI TO HELP EXPLAIN HOW TO COMMUNICATE PROPERLY WITH THE GOOGLE GEN AI, and communicate to route.ts, and format JSON data
 export default function OnboardingForm() {
 
   const [currentSectionIndex, setCurrentSectionIndex] = useState(0);
@@ -540,32 +540,39 @@ export default function OnboardingForm() {
                   ? 'bg-red-50 border-red-200' 
                   : 'bg-green-50 border-green-200'
               }`}>
+
                 <h3 className={`text-lg font-semibold mb-2 ${
                   analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-800'
                 }`}>
                   📊 Comparison to Global Average
                 </h3>
+
                 <p className={`text-3xl font-bold ${
                   analysisResult.percentAboveAverage > 0 ? 'text-red-700' : 'text-green-600'
                 }`}>
                   {analysisResult.percentAboveAverage > 0 ? '+' : ''}{analysisResult.percentAboveAverage}%
                 </p>
+
                 <p className="text-sm text-gray-600 mt-1">
                   {analysisResult.percentAboveAverage > 0 ? 'Above' : 'Below'} global average {/*Decides whether to print above or below*/}
                 </p>
+
               </div>
             </div>
 
             {/* Top Contributors */}
             <div className="bg-orange-50 p-6 rounded-lg border border-orange-200">
-              <h3 className="text-lg font-semibold text-orange-800 mb-4">Your Top 2 Carbon Contributors</h3>
+              <h3 className="text-lg font-semibold text-orange-700 mb-4">Your Top 2 Carbon Contributors</h3>
               <div className="space-y-2">
                 {analysisResult.topContributors.map((contributor, index) => (
                   <div key={index} className="flex items-center space-x-3">
-                    <span className="bg-orange-200 text-orange-800 px-3 py-1 rounded-full text-sm font-medium">
+                    <span className="bg-orange-200 text-orange-700 px-3 py-1 rounded-full text-sm font-medium">
                       #{index + 1}
                     </span>
-                    <span className="text-gray-700">{contributor}</span>
+
+                    <span className="text-gray-700">
+                      {contributor}
+                    </span>
                   </div>
                 ))}
               </div>
