@@ -50,7 +50,7 @@ const infoSection = {
           <li>The image of the Earth (above) is credit to Wikipedia, ans is the Earth seen from Apollo</li>
         </ul>
       <p>
-        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI limitations, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span>
+        <strong>Note:</strong> This is an demonstrational educational tool, and due to AI limitations, we cannot guarantee 100% accuracy. <span className="text-green-700 font-semibold ">Questions without the * are not required.</span> AI Latency can vary. Allow at least 20 seconds before trying again.
       </p>
       <p>
         <strong>Privacy:</strong> The data you send is <span className="font-semibold text-green-700">not seen by anyone</span> on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
