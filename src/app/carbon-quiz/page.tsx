@@ -508,6 +508,7 @@ export default function OnboardingForm() {
     setApiError(null); //API errors must be null, even if previous submission was faulty.
   };
 
+
   if (submitted) {
     return (
       <div className="p-6 max-w-4xl mx-auto bg-white rounded shadow">
