@@ -15,9 +15,7 @@ const AboutPage = () => {
               Our Mission
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              Verda aims to empower users to make more environmentally conscious
-              decisions. Our platform offers two main features: a CO2 Calculator
-              and an innovative Trash Sorter.
+              We aim to encourage users to make more environmentally conscious descisions. Our motto is <span className="font-semibold">Track More, Waste Less.</span> We have 2 platforms on one; our Trash Sorted and the CO2 Calculator, which link together with our backend 'history' database for users with an account.
             </p>
           </section>
 
@@ -36,8 +34,8 @@ const AboutPage = () => {
                 footprint of your activities.
               </li>
               <li>
-                <strong>History:</strong> (Coming Soon) Track your scans and CO2
-                calculations over time.
+                <strong>History: </strong>Track your trash scans scans and CO2
+                calculations & AI recommendations over time, as you take into account AI reccomendations
               </li>
             </ul>
           </section>
@@ -58,7 +56,7 @@ const AboutPage = () => {
                 Google’s Teachable Machine
               </Link>
               . This amazing tool allows for the creation of custom image
-              classification models quickly and easily. The model was trained
+              classification models quickly and easily. <br></br><br></br>The model was trained
               using the{" "}
               <Link
                 href="https://github.com/garythung/trashnet"
@@ -69,6 +67,9 @@ const AboutPage = () => {
                 TrashNet dataset
               </Link>
               .
+              <br></br><br></br>We also used Google Gemini 2.0 Flash model to power the AI recommendations and the calculation
+              of your average CO2 emissions lifetime. This could not be done with a simple mathematical formula, as 
+              there are so many parameters and things to consider.
             </p>
           </section>
 

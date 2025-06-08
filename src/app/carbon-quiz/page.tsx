@@ -14,6 +14,8 @@
 // Colors
   // All blue is bg-600 or text-blue-600, no contrast
 
+// do change it tho, thats just the current setup
+
 
 import React, { useState } from "react";
 import "./carbon-quiz.css";
