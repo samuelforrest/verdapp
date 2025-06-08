@@ -17,14 +17,10 @@ const infoSection = {
   section: "Welcome to the Carbon Footprint Quiz",
   fields: [],
   info: (
+    
     <div className="space-y-4">
       {/* Apollo Wikipedia Earth Image */}
       <div className="flex justify-center mb-6">
-        <img
-          src="https://upload.wikimedia.org/wikipedia/commons/thumb/9/97/The_Earth_seen_from_Apollo_17.jpg/480px-The_Earth_seen_from_Apollo_17.jpg"
-          alt="the Earth seen from Apollo"
-          className="rounded-full w-48 h-48 object-cover shadow-md"
-        />
       </div>
       <h2 className="text-2xl font-bold text-green-700">🌱🔄 Lifetime CO2 Emissions Calculator</h2>
       <p>
