@@ -206,13 +206,13 @@ const questions = [
       }
     ]
   },
-  {
+  { //Section 3 gathers information about transport of the user
     section: "Transportation",
     fields: [
       {
         name: "number_and_types_of_vehicles",
         label: "Describe the number and types of vehicles you own?",
-        type: "text", //This must be text - mutliselect not supported by some browsers
+        type: "text", //This must be text - mutliselect not supported by some browsers - don't change we need a text question
         required: true,
       },
       {
@@ -261,7 +261,7 @@ const questions = [
       }
     ]
   },
-  {
+  { // This section is about the user's diet and food waste
     section: "Food",
     fields: [
       {
