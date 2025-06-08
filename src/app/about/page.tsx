@@ -15,7 +15,7 @@ const AboutPage = () => {
               Our Mission
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              We aim to encourage users to make more environmentally conscious descisions. Our motto is <span className="font-semibold">Track More, Waste Less.</span> We have 2 platforms on one; our Trash Sorted and the CO2 Calculator, which link together with our backend 'history' database for users with an account.
+              We aim to encourage users to make more environmentally conscious descisions. Our motto is <span className="font-semibold">Track More, Waste Less.</span> We have 2 platforms on one; our Trash Sorter and the CO2 Calculator, which link together with our backend 'history' database for users with an account.
             </p>
           </section>
 
