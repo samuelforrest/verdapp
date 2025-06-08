@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react";
 // Removed axios import as it\'s not used with mock data
-import NavigationBar from "../../components/NavigationBar";
 import "./carbon-quiz.css";
 
 // Updated AnswerOption interface to include score
@@ -406,7 +405,7 @@ const CarbonQuizPage = () => {
         <p className="text-bark-brown mt-2">
           We&apos;re working on bringing you a great quiz soon!
         </p>
-        <NavigationBar />
+        {/* <NavigationBar /> */}
       </div>
     );
   }
@@ -477,7 +476,7 @@ const CarbonQuizPage = () => {
           </div>
         )}
       </main>
-      <NavigationBar />
+      {/* <NavigationBar /> */}
     </div>
   );
 };

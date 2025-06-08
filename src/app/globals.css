@@ -2,11 +2,30 @@
 @tailwind components;
 @tailwind utilities;
 
+/* :root defines CSS variables for global use, primarily for theming. */
+:root {
+  --foreground-rgb: 0, 0, 0; /* Default text color */
+  --background-start-rgb: 214, 219, 220; /* Start color for background gradients or base */
+  --background-end-rgb: 255, 255, 255; /* End color for background gradients */
+}
+
 /* Global styles for the application */
 
 /* Define base styles for the body */
 body {
-  @apply font-sans bg-background-app text-text-on-light-primary; /* Apply default font, background, and text color */
+  color: rgb(var(--foreground-rgb));
+
+  /* Defines a multi-stop linear gradient for the page background. */
+  /* The gradient transitions from a light grey-blue, through soft teals, to white. */
+  background: linear-gradient(
+    120deg,
+    rgba(var(--background-start-rgb), 1) 0%,
+    rgba(224, 242, 241, 0.7) 30%,
+    rgba(178, 223, 219, 0.6) 60%,
+    rgba(var(--background-end-rgb), 1) 100%
+  );
+  background-attachment: fixed; /* Keeps background stationary during scroll for a parallax effect. */
+  min-height: 100vh; /* Ensures gradient covers the full viewport height. */
 }
 
 /* Define styles for headings */
@@ -16,5 +35,11 @@ h3,
 h4,
 h5,
 h6 {
-  @apply font-serif; /* Apply serif font to headings */
+  font-family: serif; /* Apply serif font to headings */
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
 }

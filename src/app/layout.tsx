@@ -1,43 +1,47 @@
 import type { Metadata } from "next";
-import { Nunito_Sans, Merriweather } from "next/font/google";
+import { Montserrat, Lora } from "next/font/google";
 import "./globals.css";
 import NavigationBar from "@/components/NavigationBar";
 
-// Font configuration for Nunito Sans
-const nunitoSans = Nunito_Sans({
+// Initialize Montserrat font with specified subsets, display strategy, and CSS variable.
+const montserrat = Montserrat({
   subsets: ["latin"],
-  display: "swap",
-  variable: "--font-nunito-sans", // CSS variable for Nunito Sans
+  display: "swap", // Ensures text remains visible during font loading by swapping to the custom font once ready.
+  variable: "--font-montserrat", // Assigns the font to a CSS variable for easy use in stylesheets.
 });
 
-// Font configuration for Merriweather
-const merriweather = Merriweather({
-  weight: ["300", "400", "700"],
+// Initialize Lora font with specified weights, subsets, display strategy, and CSS variable.
+const lora = Lora({
+  weight: ["400", "500", "600", "700"], // Includes multiple weights for varied typographic emphasis.
   subsets: ["latin"],
   display: "swap",
-  variable: "--font-merriweather", // CSS variable for Merriweather
+  variable: "--font-lora",
 });
 
-// Metadata for the application
+// Defines metadata for the application, including title and description for SEO and browser display.
 export const metadata: Metadata = {
-  title: "EcoScan",
+  title: "Verda",
   description: "Scan products to find their eco-friendly alternatives!",
 };
 
-// Root layout component
+// RootLayout is the main layout component that wraps all pages.
+// It sets up the HTML structure, applies global fonts, and includes the navigation bar.
 export default function RootLayout({
-  children,
+  children, // Represents the content of the specific page being rendered.
 }: Readonly<{
   children: React.ReactNode;
 }>) {
   return (
     <html
       lang="en"
-      className={`${nunitoSans.variable} ${merriweather.variable}`} // Apply font variables to HTML element
+      // Applies the CSS variables for Montserrat and Lora fonts to the html element,
+      // making them available globally.
+      className={`${montserrat.variable} ${lora.variable}`}
     >
-      <body>
+      {/* Body element intentionally has no Tailwind classes to allow globals.css to control the background. */}
+      <body className="">
         <NavigationBar />
-        {children}
+        {children} {/* Page content is rendered here */}
       </body>
     </html>
   );

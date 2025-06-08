@@ -3,24 +3,24 @@
 import { useState, useCallback } from "react";
 import TeachableMachineClient from "../components/TeachableMachineClient";
 
-// Type definition for individual bin characteristics.
+// Defines the structure for information about a single waste bin.
 interface BinInfo {
-  name: string; // Display name of the bin.
-  color: string; // Tailwind CSS class for background color (e.g., 'bg-blue-500').
-  textColor?: string; // Optional: Tailwind CSS class for text color (e.g., 'text-white').
-  description: string; // Description of what goes into the bin.
-  items: string[]; // Example items for this bin.
+  name: string; // The display name for the bin, e.g., "Recycling", "General Waste".
+  color: string; // Tailwind CSS class for the bin's background color, e.g., 'bg-blue-500'.
+  textColor?: string; // Optional Tailwind CSS class for text color, for contrast against bin color.
+  description: string; // A brief description of what items belong in this bin.
+  items: string[]; // A list of example items that go into this bin.
 }
 
-// Type definition for a country's complete bin information system.
+// Defines the structure for a country's complete waste bin system information.
 interface CountryBinInfo {
-  countryName: string; // Name of the country.
-  bins: BinInfo[]; // Array of bin information for the country.
-  notes?: string; // Optional general notes about the country's recycling/waste system.
+  countryName: string; // The full name of the country.
+  bins: BinInfo[]; // An array of BinInfo objects detailing each type of bin used in the country.
+  notes?: string; // Optional field for general notes or important considerations about the country's waste system.
 }
 
 // Data store for country-specific waste bin information.
-// Keyed by country code (e.g., "DE", "JP").
+// This object holds waste management details for various countries, keyed by their two-letter country code (e.g., "DE" for Germany).
 const countrySpecificBinInfo: Record<string, CountryBinInfo> = {
   // Germany: Detailed multi-stream recycling with mandatory sorting.
   DE: {
@@ -1846,7 +1846,7 @@ export default function Home() {
         {/* Header section */}
         <header className="text-center space-y-4">
           <h1 className="text-5xl md:text-6xl font-serif text-pine-green font-bold">
-            EcoHub Trash Sorter
+            Verda Trash Sorter
           </h1>
           <p className="text-lg md:text-xl text-bark-brown max-w-2xl mx-auto">
             Confused about where your trash goes? Select your country and use
@@ -1994,11 +1994,10 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Footer section */}
-      <footer className="w-full max-w-6xl mx-auto text-center py-8 mt-12 border-t border-stone-gray/50">
-        <p className="text-sm text-stone-gray">
-          &copy; {new Date().getFullYear()} EcoHub. Sorting our future, one
-          piece of trash at a time.
+      {/* Footer with Copyright and Motto */}
+      <footer className="w-full max-w-5xl mt-16 pt-8 border-t border-gray-300 text-center">
+        <p className="text-sm text-gray-600">
+          &copy; {new Date().getFullYear()} Verda. Track More. Waste Less.
         </p>
       </footer>
     </main>

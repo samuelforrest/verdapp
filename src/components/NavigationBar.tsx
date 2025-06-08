@@ -2,44 +2,69 @@
 
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import Image from "next/image";
 
-// Navigation bar component
+// Defines the structure for a navigation link object.
+interface NavLink {
+  href: string; // The URL path for the link.
+  label: string; // The display text for the link.
+  icon: string; // The path to the icon for the link.
+}
+
+// NavigationBar component provides consistent site navigation.
 const NavigationBar = () => {
-  const pathname = usePathname(); // Get the current path
+  // usePathname hook from Next.js to get the current URL path.
+  const pathname = usePathname();
 
-  // Define navigation links
-  const navLinks = [
-    { href: "/", label: "Trash Sorter" }, // Updated label
-    { href: "/carbon-quiz", label: "CO2 Calculator" }, // Updated label
-    { href: "/history", label: "History" }, // Added History tab
-    { href: "/about", label: "About" },
+  // Array of navigation link objects used to build the navigation menu.
+  const navLinks: NavLink[] = [
+    { href: "/", label: "Trash Sorter", icon: "/icons/trash-sorter-icon.svg" },
+    {
+      href: "/carbon-quiz",
+      label: "CO2 Calculator",
+      icon: "/icons/calculator-icon.svg",
+    },
+    { href: "/history", label: "History", icon: "/icons/history-icon.svg" },
+    { href: "/about", label: "About", icon: "/icons/about-icon.svg" },
   ];
 
   return (
-    <nav className="bg-forest-green text-white p-4 shadow-md">
+    // Main navigation container with background color, text color, padding, and shadow.
+    <nav className="bg-verda-green text-text-on-dark-primary p-4 shadow-md">
       <div className="container mx-auto flex justify-between items-center">
-        {/* Logo or brand name */}
-        <Link
-          href="/"
-          className="text-2xl font-bold font-serif hover:text-pine-green transition-colors"
-        >
-          EcoScan
+        {/* Site logo, links to the homepage. */}
+        <Link href="/" className="flex items-center">
+          <Image
+            src="/verda-logo cropped.png"
+            alt="Verda Logo"
+            width={100}
+            height={32}
+            priority // Prioritizes loading of the logo image.
+          />
         </Link>
-        {/* Navigation links */}
-        <ul className="flex space-x-6 items-center">
+        {/* Unordered list for navigation links. */}
+        <ul className="flex space-x-4 items-center">
           {navLinks.map((link) => (
             <li key={link.href}>
               <Link
                 href={link.href}
-                className={`hover:text-pine-green transition-colors ${
+                // Dynamically sets link styling based on whether the link is active (current path).
+                className={`flex items-center px-2.5 py-1.5 rounded-md text-sm font-medium transition-colors ${
                   pathname === link.href
-                    ? "text-pine-green font-semibold border-b-2 border-pine-green"
-                    : "text-gray-200"
+                    ? "bg-nav-hover-bg text-nav-active-text" // Active link styles
+                    : "text-text-on-dark-secondary hover:bg-nav-hover-bg hover:text-white" // Inactive link styles
                 }`}
               >
-                {/* Placeholder for icons - you can add actual icons here */}
-                {link.label === "History" && <span className="mr-1">📊</span>}
-                {link.label === "About" && <span className="mr-1">ℹ️</span>}
+                {/* Displays icon if provided for the link. */}
+                {link.icon && (
+                  <Image
+                    src={link.icon}
+                    alt={`${link.label} icon`}
+                    width={16}
+                    height={16}
+                    className="mr-1.5"
+                  />
+                )}
                 {link.label}
               </Link>
             </li>

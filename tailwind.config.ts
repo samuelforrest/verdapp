@@ -12,6 +12,7 @@ module.exports = {
     extend: {
       // Custom color palette.
       colors: {
+        "verda-green": "#2ab985", // New primary green
         "forest-green": "#228B22", // Rich, dark green
         "pine-green": "#01796F", // Deep, cool green
         "emerald-green": "#50C878", // Bright, vibrant green
@@ -21,25 +22,28 @@ module.exports = {
         "fern-green": "#4F7942", // Natural, leafy green
         "moss-green": "#8FBC8F", // Soft, muted green
 
-        "background-app": "#FAF0E6", // Linen - for general app background
-        "text-on-light-primary": "#374151", // Dark gray for primary text on light backgrounds
-        "text-on-light-secondary": "#6B7280", // Lighter gray for secondary text on light backgrounds
+        "background-app": "#F0FDF4", // Light green tint for background
+        "text-on-light-primary": "#1F2937", // Darker gray for better contrast
+        "text-on-light-secondary": "#4B5563", // Medium gray
 
-        "text-on-dark-primary": "#F0FFF0", // Honeydew - for primary text on dark backgrounds
-        "text-on-dark-secondary": "#D3D3D3", // LightGray - for secondary text on dark backgrounds
+        "text-on-dark-primary": "#FFFFFF", // White for primary text on dark backgrounds
+        "text-on-dark-secondary": "#E5E7EB", // Lighter gray for secondary text on dark backgrounds
 
-        // "accent": "#FFD700", // Gold (for highlights and calls to action)
+        "nav-hover-bg": "#1c8c6c", // Darker shade of verda-green for nav hover
+        "nav-active-text": "#FFFFFF", // White for active nav text
+        "nav-active-border": "#FFFFFF", // White for active nav border
       },
       // Custom font families.
       fontFamily: {
-        sans: ['"Nunito Sans"', "sans-serif"],
-        serif: ['"Merriweather"', "serif"],
+        sans: ["var(--font-montserrat)", "sans-serif"], // Updated to Montserrat
+        serif: ["var(--font-lora)", "serif"], // Updated to Lora
       },
       // Custom background images (currently unused but available).
       backgroundImage: {
         "gradient-radial": "radial-gradient(var(--tw-gradient-stops))",
         "gradient-conic":
           "conic-gradient(from 180deg at 50% 50%, var(--tw-gradient-stops))",
+        "leaf-pattern": "url('/verda-leaf-logo-pattern.svg')", // Updated to new Verda leaf pattern
       },
     },
   },

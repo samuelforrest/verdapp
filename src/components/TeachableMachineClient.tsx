@@ -1,7 +1,6 @@
 "use client";
 
 import React, { useEffect, useRef, useState, useCallback } from "react";
-// @ts-expect-error No types available for this package
 import * as tmImage from "@teachablemachine/image";
 
 // Props for the TeachableMachineClient component

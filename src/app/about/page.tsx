@@ -6,8 +6,8 @@ const AboutPage = () => {
   return (
     <main className="flex min-h-screen flex-col items-center justify-start p-6 bg-background-app text-text-on-light-primary font-sans">
       <div className="w-full max-w-5xl mx-auto mt-8">
-        <h1 className="text-5xl font-bold text-center text-forest-green font-serif mb-12">
-          About EcoScan
+        <h1 className="text-5xl font-bold text-center text-verda-green font-serif mb-12">
+          About Verda
         </h1>
         <div className="bg-white p-8 rounded-xl shadow-2xl space-y-6">
           <section>
@@ -15,10 +15,9 @@ const AboutPage = () => {
               Our Mission
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              EcoScan aims to empower users to make more environmentally
-              conscious decisions. By providing tools to easily identify
-              recyclable materials and understand their carbon footprint, we
-              hope to contribute to a greener planet.
+              Verda aims to empower users to make more environmentally conscious
+              decisions. Our platform offers two main features: a CO2 Calculator
+              and an innovative Trash Sorter.
             </p>
           </section>
 
