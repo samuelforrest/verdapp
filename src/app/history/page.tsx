@@ -38,7 +38,7 @@ export default function LeaderboardPage() {
     // eslint-disable-next-line
   }, [sortBy]);
 
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = async () => { //fetch current leaderboard from supabase database
     try {
       setLoading(true);
       setError(null); //reset errors
@@ -53,7 +53,7 @@ export default function LeaderboardPage() {
       setEntries(data || []);
     } catch (err) {
 
-      setError('Failed to load leaderboard. Please try again later.');
+      setError('Leaderboard didnt load');
     }
      finally {
       setLoading(false);
@@ -76,9 +76,9 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen py-10 bg-transparent"> {/* bg handled by globals.css */}
+    <div className="min-h-screen py-10 bg-transparent"> 
       <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
-        <h1 className="text-2xl font-bold text-green-700 mb-2 text-center font-serif">🌱 Carbon Tracker Leaderboard</h1>
+        <h1 className="text-2xl font-bold text-green-700 mb-2 text-center font-serif">Carbon Tracker Leaderboard</h1>
         <p className="text-gray-600 text-center mb-6">
           See how other people are doing with their environmental impact. <br />
           <span className="font-semibold">Note: Lower is better!</span>
@@ -88,7 +88,7 @@ export default function LeaderboardPage() {
           <button
             onClick={() => setSortBy('lowest')}
             className={`px-4 py-2 rounded font-medium transition-colors ${
-              sortBy === 'lowest'
+              sortBy === 'lowest' // Sets it to sort from lowest-->highest
                 ? 'bg-green-700 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-green-100'
             }`}
@@ -98,9 +98,9 @@ export default function LeaderboardPage() {
           <button
             onClick={() => setSortBy('highest')}
             className={`px-4 py-2 rounded font-medium transition-colors ${
-              sortBy === 'highest'
-                ? 'bg-green-700 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-green-100'
+              sortBy === 'highest' // Sets it to sort from hightest --> lowest
+                ? 'bg-red-700 text-white'
+                : 'bg-gray-200 text-gray-700 hover:bg-red-100' // Make it display as red as bad
             }`}
           >
             Highest First
@@ -108,12 +108,12 @@ export default function LeaderboardPage() {
         </div>
 
         {loading && (
-          <div className="text-center text-gray-500 py-10">The carbon footprint leaderboard is loading...</div>
+          <div className="text-center text-gray-500 py-10">The carbon footprint leaderboard is loading....</div>
         )}
 
         {error && (
-          <div className="bg-red-100 border border-red-400 text-red-600 px-4 py-3 rounded mb-6 text-center">
-            {error}
+          <div>
+            {error} //print error event
           </div>
         )}
 
