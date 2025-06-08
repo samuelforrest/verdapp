@@ -14,7 +14,7 @@ interface Bin {
   description?: string; // Description of what goes in the bin
 }
 
-// Defines the structure for a country's complete waste bin system information.
+// Defines the structure for a countrys complete waste bin system information.
 interface CountryBinInfo {
   countryName: string;
   bins: Bin[]; // Uses the Bin interface
@@ -405,7 +405,7 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     generalAdvice: [
-      "'Polluter pays' principle is strong; taxed bags for general waste. High recycling rates via communal collection points.",
+      "Polluter pays principle is strong; taxed bags for general waste. High recycling rates via communal collection points.",
     ],
     source: "Common knowledge, Swiss federal and cantonal waste guidelines.",
   },
@@ -838,7 +838,7 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     generalAdvice: [
-      "Sorting instructions (consignes de tri) can vary locally. 'Bac jaune' is common for mixed recyclables. Bio-waste collection is expanding.",
+      "Sorting instructions (consignes de tri) can vary locally. &aposBac jaune&apos is common for mixed recyclables. Bio-waste collection is expanding.",
     ],
     source:
       "Common knowledge, ADEME (French Environment and Energy Management Agency), Citeo.",
@@ -908,7 +908,7 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     generalAdvice: [
-      "'Raccolta differenziata' (separate collection) is often door-to-door with specific calendars. Rules vary significantly by comune (municipality).",
+      "&aposRaccolta differenziata&apos (separate collection) is often door-to-door with specific calendars. Rules vary significantly by comune (municipality).",
     ],
     source:
       "Common knowledge, Italian Ministry of Environment, local municipal waste guides.",
@@ -1082,7 +1082,7 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     generalAdvice: [
-      "Follow the bin lid colors. 'Recycle Right' campaigns provide local info. Soft plastics often go to REDcycle bins at supermarkets.",
+      "Follow the bin lid colors. &aposRecycle Right&apos campaigns provide local info. Soft plastics often go to REDcycle bins at supermarkets.",
     ],
     source: "Common knowledge, Planet Ark, Australian local council websites.",
   },
@@ -1140,7 +1140,7 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     generalAdvice: [
-      "Recycling rules vary greatly by council. Check your local council's website for specific guidelines. Focus on reducing waste first.",
+      "Recycling rules vary greatly by council. Check your local council&apos;s website for specific guidelines. Focus on reducing waste first.",
     ],
     source: "Common knowledge, New Zealand local council websites, WasteMINZ.",
   },
@@ -1386,8 +1386,8 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
     source:
       "Common knowledge, Ecoembes (Spanish packaging recovery organization), Spanish Ministry for Ecological Transition.",
   },
-  // US is already defined, ensure it's up-to-date or merge if necessary.
-  // For this update, I'm assuming the user wants to replace the existing US entry if it was minimal
+  // US is already defined, ensure its up-to-date or merge if necessary.
+  // For this update, Im assuming the user wants to replace the existing US entry if it was minimal
   // or ensure the new detailed one is used. Given the prompt structure, it implies a full replacement/addition.
   US: {
     countryName: "United States",
@@ -1438,10 +1438,10 @@ const countrySpecificBinInfo: CountrySpecificBinInfo = {
       },
     ],
     notes:
-      "Waste management is highly localized. There is no national standard. ALWAYS check with your local city or county waste management service for specific rules. 'Wishcycling' (putting non-recyclables in recycling) contaminates loads.",
+      "Waste management is highly localized. There is no national standard. ALWAYS check with your local city or county waste management service for specific rules. &apos;Wishcycling&apos; (putting non-recyclables in recycling) contaminates loads.",
     source: "General knowledge, EPA, local municipal waste websites.",
   },
-  // Ensure no trailing comma after the last country object if it's the absolute end of the main object.
+  // Ensure no trailing comma after the last country object if its the absolute end of the main object.
 };
 
 // Maps Teachable Machine prediction classes to common bin/material types and advice
@@ -1461,7 +1461,7 @@ const classToBinMapping: Record<
       "recyclables",
       "paper packaging", // Added
     ],
-    advice: "Ensure it's clean and dry. Remove any plastic wrapping.",
+    advice: "Ensure it&apos;s clean and dry. Remove any plastic wrapping.",
   },
   Cardboard: {
     binNameKeywords: [
@@ -1572,7 +1572,7 @@ const classToBinMapping: Record<
       "red lid bin", // Added for landfill bins like in AU
     ],
     advice:
-      "When in doubt, and it's not hazardous or recyclable, put it here. Avoid putting recyclables or hazardous waste in general trash.",
+      "When in doubt, and it&apos;s not hazardous or recyclable, put it here. Avoid putting recyclables or hazardous waste in general trash.",
   },
   Battery: {
     binNameKeywords: [
@@ -1703,7 +1703,7 @@ const getBinForPrediction = (
       };
     }
     return {
-      // Ultimate fallback if even general trash isn't found by keywords
+      // Ultimate fallback if even general trash isnt found by keywords
       ...fallbackBin,
       advice:
         "Item not recognized for specific binning. Check local guidelines.",
@@ -1728,7 +1728,7 @@ const getBinForPrediction = (
   }
 
   // Fallback: if no specific bin is found by keywords in bin names,
-  // check if the predictionClass (e.g., "Paper") is mentioned in any bin's items list.
+  // check if the predictionClass (e.g., "Paper") is mentioned in any bins items list.
   for (const bin of currentCountryInfo.bins) {
     if (
       bin.items.some(
@@ -1826,7 +1826,7 @@ export default function TrashSorterPage() {
       setIsCameraActive(true); // Activate camera when opening scanner
       // If opening scanner, and search was active, scan should take priority
       // but handlePrediction will set it once a prediction comes in.
-      // If there's no active search, we don't need to change priority yet.
+      // If theres no active search, we dont need to change priority yet.
     } else {
       setIsCameraActive(false); // Deactivate camera when closing
       handlePrediction(null); // Clear prediction when scanner is manually closed
@@ -2089,7 +2089,7 @@ export default function TrashSorterPage() {
               {/* Gradient background, border, flex layout for side-by-side view on medium screens */}
               <button
                 onClick={toggleScanner}
-                className="absolute top-3 right-3 text-gray-600 hover:text-verda-green text-4xl font-bold transition-colors z-10" /* Enhanced close button, ensure it's above other elements */
+                className="absolute top-3 right-3 text-gray-600 hover:text-verda-green text-4xl font-bold transition-colors z-10" /* Enhanced close button, ensure its above other elements */
                 aria-label="Close scanner"
               >
                 &times;
