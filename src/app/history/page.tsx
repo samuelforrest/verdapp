@@ -2,7 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js'; //Directly connect to supabase
+import { createClient } from '@supabase/supabase-js';
+import '../globals.css'; // Ensure global styles are applied
 
 interface LeaderboardEntry {
   id: string;
@@ -67,11 +68,12 @@ export default function LeaderboardPage() {
   };
 
   return (
-    <div className="min-h-screen bg-[#f8fffe] py-10">
+    <div className="min-h-screen py-10 bg-transparent"> {/* bg handled by globals.css */}
       <div className="max-w-2xl mx-auto bg-white rounded shadow p-6">
-        <h1 className="text-2xl font-bold text-green-700 mb-2 text-center">🌱 Carbon Tracker Leaderboard</h1>
+        <h1 className="text-2xl font-bold text-green-700 mb-2 text-center font-serif">🌱 Carbon Tracker Leaderboard</h1>
         <p className="text-gray-600 text-center mb-6">
-          See how other people are doing with their environmental impact. <br></br><span className="font-semibold">Note: Lower is better!</span>
+          See how other people are doing with their environmental impact. <br />
+          <span className="font-semibold">Note: Lower is better!</span>
         </p>
 
         <div className="flex justify-center gap-3 mb-6">

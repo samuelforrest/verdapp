@@ -1,21 +1,7 @@
 "use client";
 
-//Styling for this page, and recommended for the History and About pages. Samuel.
-// All titles / important
-  // Font bold / semi-bold dependent on importance
-  // Color is text-green-700 always
-  // Green underline on links
-// For all text
-  // Black
-  // Font bold for importance
-// For all buttons
-  // When unselected: bg-green-700
-  // When hovered: bg-green-500
-// Colors
-  // All blue is bg-600 or text-blue-600, no contrast
-// do change it tho, thats just the current setup
-
 import React, { useState } from "react";
+import "../globals.css"; // Ensure global styles and background are applied
 import "./carbon-quiz.css";
 import { createClient } from "@supabase/supabase-js"; //Directly connect to Supabase database
 
