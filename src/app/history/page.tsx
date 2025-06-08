@@ -121,18 +121,18 @@ export default function LeaderboardPage() {
 
           <div className="space-y-4">
 
-            {entries.map((entry, index) => (
+            {entries.map((entry, index) => ( //get index for each entry 
 
               <div
                 key={entry.id}
                 className="border border-gray-200 rounded-lg p-4 flex flex-col gap-2 bg-gray-50"
               >
 
-                <div className="flex items-center justify-between">
-                  <div className="flex items-center gap-3">
+                <div className="flex items-center justify-between"> {/*center o center*/}
+                  <div className="flex items-center gap-3"> {/*center o center */}
                     
-                    <span className="text-lg font-bold text-green-700">{getRankSuffix(index + 1)}</span>
-                    <span className="font-semibold text-gray-800">{entry.unique_name}</span>
+                    <span className="text-lg font-bold text-green-700">{getRankSuffix(index + 1)}</span> {/*add one to index*/}
+                    <span className="font-semibold text-gray-800">{entry.unique_name}</span> {/* show user selected unique id next to rank no.*/}
                   
                   </div>
                   
