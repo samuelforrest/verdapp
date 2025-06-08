@@ -78,7 +78,7 @@ const AboutPage = () => {
               Contact Us
             </h2>
             <p className="text-lg text-gray-700 leading-relaxed">
-              Have questions or feedback? We’d love to hear from you! Reach out
+              Have questions or feedback? Did the AI not respond? We’d love to hear from you! Reach out
               to us at{" "}
               <Link
                 href="mailto:kunseljchodak@gmail.com"
