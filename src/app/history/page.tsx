@@ -2,8 +2,8 @@
 
 import { useEffect, useState } from 'react';
 import Link from 'next/link';
-import { createClient } from '@supabase/supabase-js';
-import '../globals.css'; // Ensure global styles are applied
+import { createClient } from '@supabase/supabase-js'; // Directly connect to supabase
+import '../globals.css'; // GLOBAL STYLES
 
 interface LeaderboardEntry {
   id: string;

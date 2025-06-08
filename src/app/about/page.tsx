@@ -1,7 +1,7 @@
 // src/app/about/page.tsx
 import React from "react";
 import Link from "next/link";
-import "../globals.css"; // Import global styles for background and fonts
+import "../globals.css"; // GLOBAL STYLES
 
 const AboutPage = () => {
   return (

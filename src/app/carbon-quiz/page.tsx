@@ -1,7 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import "../globals.css"; // Ensure global styles and background are applied
+import "../globals.css"; // GLOBAL STYLES
 import "./carbon-quiz.css";
 import { createClient } from "@supabase/supabase-js"; //Directly connect to Supabase database
 
