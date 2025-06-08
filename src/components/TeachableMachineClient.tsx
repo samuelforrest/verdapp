@@ -7,13 +7,15 @@ import * as tmImage from "@teachablemachine/image";
 // Props for the TeachableMachineClient component
 interface TeachableMachineClientProps {
   modelUrl: string;
-  onPrediction: (prediction: string) => void; // Callback function for predictions
+  onPrediction: (prediction: string, countryCode: string) => void; // Callback function for predictions
+  selectedCountry: string; // Add selectedCountry to props
 }
 
 // Teachable Machine client component for image classification
 const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
   modelUrl,
   onPrediction,
+  selectedCountry, // Destructure selectedCountry
 }) => {
   const [model, setModel] = useState<tmImage.CustomMobileNet | null>(null); // Stores the loaded Teachable Machine model
   const [maxPredictions, setMaxPredictions] = useState(0); // Maximum number of prediction classes
@@ -40,11 +42,11 @@ const TeachableMachineClient: React.FC<TeachableMachineClientProps> = ({
         }
         if (highestProb > 0.8) {
           // Confidence threshold
-          onPrediction(highestPrediction); // Send the highest probability prediction
+          onPrediction(highestPrediction, selectedCountry); // Send the highest probability prediction and country
         }
       }
     },
-    [model, maxPredictions, onPrediction]
+    [model, maxPredictions, onPrediction, selectedCountry] // Add selectedCountry to dependencies
   );
 
   // Prediction loop

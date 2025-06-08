@@ -1,6 +1,6 @@
 "use client";
 
-import { useState } from "react";
+import { useState, useCallback } from "react";
 import TeachableMachineClient from "../components/TeachableMachineClient";
 
 // Type definition for individual bin characteristics.
@@ -1818,6 +1818,10 @@ export default function Home() {
   const [selectedCountry, setSelectedCountry] = useState<string>("US"); // Default to United States.
   // State for the prediction result from Teachable Machine.
   const [predictionResult, setPredictionResult] = useState<string | null>(null);
+  // State for the suggested bin information.
+  const [suggestedBin, setSuggestedBin] = useState<
+    (BinInfo & { advice?: string }) | null
+  >(null);
 
   // URL for your Teachable Machine model.
   // Ensure this is the full URL to the `model.json` file hosted by Teachable Machine.
@@ -1827,10 +1831,14 @@ export default function Home() {
   const currentBinInfo = countrySpecificBinInfo[selectedCountry];
 
   // Handler for when a prediction is made by the Teachable Machine.
-  const handlePrediction = (className: string) => {
-    setPredictionResult(`Predicted: ${className}`);
-    // Potentially trigger other actions based on prediction
-  };
+  const handlePrediction = useCallback(
+    (className: string, countryCode: string) => {
+      setPredictionResult(`Predicted: ${className}`);
+      const bin = getBinForPrediction(className, countryCode);
+      setSuggestedBin(bin);
+    },
+    [setPredictionResult, setSuggestedBin]
+  ); // getBinForPrediction is stable and defined outside
 
   return (
     <main className="flex flex-col min-h-screen bg-pale-leaf font-sans items-center text-forest-green p-4 md:p-8">
@@ -1860,6 +1868,7 @@ export default function Home() {
             <TeachableMachineClient
               modelUrl={modelUrl}
               onPrediction={handlePrediction}
+              selectedCountry={selectedCountry} // Pass selectedCountry to TeachableMachineClient
             />
             <p className="text-xs text-gray-600 mt-2 text-center">
               For best accuracy, please use a solid white, black, or grey
@@ -1873,6 +1882,24 @@ export default function Home() {
                   <p className="text-lg text-pine-green font-semibold">
                     {predictionResult}
                   </p>
+                </div>
+              )}
+              {/* Display suggested bin */}
+              {suggestedBin && (
+                <div
+                  className={`mt-4 p-4 rounded-lg shadow-md ${
+                    suggestedBin.color
+                  } ${suggestedBin.textColor || "text-gray-900"}`}
+                >
+                  <h4 className="text-xl font-bold mb-2 font-serif">
+                    Suggested Bin: {suggestedBin.name}
+                  </h4>
+                  <p className="text-sm mb-1">{suggestedBin.description}</p>
+                  {suggestedBin.advice && (
+                    <p className="text-sm font-semibold mt-2">
+                      Advice: {suggestedBin.advice}
+                    </p>
+                  )}
                 </div>
               )}
             </div>
