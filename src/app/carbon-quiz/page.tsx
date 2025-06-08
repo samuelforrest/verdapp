@@ -515,13 +515,13 @@ export default function OnboardingForm() {
 
         {loading && (
           <div className="text-center py-8">
-            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-500 mx-auto mb-4"></div>
+            <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-blue-600 mx-auto mb-4"></div>
             <p className="text-blue-600 text-lg">🔍 Analyzing your carbon footprint with AI...</p>
           </div>
         )}
 
         {apiError && !loading && (
-          <div className="bg-red-100 border border-red-400 text-red-700 px-4 py-3 rounded mb-6">
+          <div className="bg-red-100 border border-red-400 text-red-600 px-4 py-3 rounded mb-6">
             <h3 className="font-semibold mb-2">❌ Analysis Error, try again or contact us.</h3>
             <p>{apiError}</p>
           </div>
@@ -597,14 +597,17 @@ export default function OnboardingForm() {
           </div>
         )}
 
-        {/* Form Data Summary (Collapsible) */}
+        {/* Form Data Summary in JSON with collapsable */}
         <details className="mt-8 bg-gray-50 p-4 rounded-lg">
-          <summary className="cursor-pointer font-medium text-gray-700 mb-2">
+
+          <summary className="font-medium text-gray-700 mb-2">
             🤓 View Your Submitted Data (JSON format)
           </summary>
+
           <pre className="bg-white p-4 rounded border text-xs overflow-auto max-h-64">
             {JSON.stringify(formData, null, 2)}
           </pre>
+
         </details>
 
         <div className="flex gap-4 mt-6">
@@ -612,7 +615,7 @@ export default function OnboardingForm() {
             className="px-6 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition-colors"
             onClick={handleReset}
           >
-            🔄 Take Quiz Again
+            🔄 Take the Quiz Again
           </button>
         </div>
       </div>
@@ -638,7 +641,7 @@ export default function OnboardingForm() {
         </div>
         <div className="w-full bg-gray-200 rounded-full h-2">
           <div 
-            className="bg-blue-500 h-2 rounded-full transition-all duration-300"
+            className="bg-green-700 h-2 rounded-full transition-all duration-300"
             style={{ width: `${(currentSectionIndex / (questions.length - 1)) * 100}%` }}
           ></div>
         </div>
@@ -703,7 +706,7 @@ export default function OnboardingForm() {
           disabled={currentSectionIndex === 1}
           className={`px-6 py-2 rounded-md font-medium transition-colors ${
             currentSectionIndex === 1 
-              ? "bg-gray-200 text-gray-400 cursor-not-allowed" 
+              ? "bg-gray-200 text-gray-400" 
               : "bg-gray-500 text-white hover:bg-gray-600"
           }`}
         >
@@ -713,7 +716,7 @@ export default function OnboardingForm() {
         {currentSectionIndex < questions.length - 1 ? (
           <button
             onClick={handleNext}
-            className="px-6 py-2 bg-blue-500 text-white rounded-md font-medium hover:bg-blue-600 transition-colors"
+            className="px-6 py-2 bg-green-700 text-white rounded-md font-medium hover:bg-green-500 transition-colors"
           >
             Next →
           </button>
