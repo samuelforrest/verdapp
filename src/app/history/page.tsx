@@ -5,23 +5,29 @@ import Link from 'next/link';
 import { createClient } from '@supabase/supabase-js'; // Directly connect to supabase
 import '../globals.css'; // GLOBAL STYLES
 
-interface LeaderboardEntry {
+interface LeaderboardEntry { ///Defines columns in each record in the Leaderboard
+
   id: string;
-  created_at: string;
+  created_at: string; //timestamp
   unique_name: string;
   total_co2_lifetime: number;
-  percent_above_average: number;
-  top_contributors: string[];
+  percent_above_average: number; //percent just a number float in tons
+  top_contributors: string[]; //of a type array
   recommendations: string[];
+
 }
 
 export default function LeaderboardPage() {
+
   const [entries, setEntries] = useState<LeaderboardEntry[]>([]);
+
   const [loading, setLoading] = useState(true);
+
   const [error, setError] = useState<string | null>(null);
+
   const [sortBy, setSortBy] = useState<'lowest' | 'highest'>('lowest');
 
-  // Initialize Supabase client
+  // Connnect to supabase client via .env
   const supabase = createClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
