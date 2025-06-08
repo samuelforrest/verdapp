@@ -55,7 +55,7 @@ const infoSection = {
       <p>
         <strong>Privacy:</strong> The data you send is <span className="font-semibold text-green-700">not seen by anyone</span> on the backend. It is sent securely to Gemini's AI model via a private API key. If you do not wish for your data to be processed by Gemini, do not answer this quiz.
       </p>
-      <p><strong>Technical Details:</strong> Data from the form is sent via JSON format to Gemini Flash 2.0 AI model.</p>
+      <p><strong>Technical Details:</strong> Data from the form is sent via JSON format to Gemini Flash 2.0 AI model. At the end of the quiz you can see the exact data sent to Gemini.</p>
       <button
         className="mt-6 px-6 py-2 bg-green-700 text-white rounded-md font-medium hover:bg-green-500 transition-colors"
         onClick={() => window.dispatchEvent(new CustomEvent("start-quiz"))}
