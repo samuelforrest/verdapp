@@ -1,22 +1,54 @@
 'use client';
 
 import { useState } from 'react';
+import { supabase } from '../lib/supabaseClient';
 import { useRouter } from 'next/navigation';
-import { createClientComponentClient } from '@supabase/auth-helpers-nextjs';
 import Link from 'next/link';
 
-export default function Login() {
+export default function Signup() {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [fullName, setFullName] = useState('');
   const [errorMsg, setErrorMsg] = useState('');
   const [hover, setHover] = useState(false);
   const router = useRouter();
-  const supabase = createClientComponentClient();
 
-  const handleLogin = async () => {
-    const { data, error } = await supabase.auth.signInWithPassword({ email, password });
-    if (error) setErrorMsg(error.message);
-    else router.push('/history'); // if logged in, they can go to the history dashboard
+  const handleSignup = async () => {
+    setErrorMsg('');
+
+    const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
+      email,
+      password,
+    });
+
+    if (signUpError) {
+      setErrorMsg(signUpError.message);
+      return;
+    }
+
+    const user = signUpData.user;
+
+    if (user) {
+      const { error: profileError } = await supabase
+        .from('profiles') // Or 'users', depending on your DB schema
+        .insert([
+          {
+            id: user.id,
+            email: email,
+            full_name: fullName,
+          },
+        ]);
+
+      if (profileError) {
+        console.error('Profile creation error:', profileError);
+        setErrorMsg('Account created, but profile not saved.');
+        return;
+      }
+
+      router.push('/history');
+    } else {
+      setErrorMsg('Account created, but no user data returned.');
+    }
   };
 
   const styles = {
@@ -27,7 +59,7 @@ export default function Login() {
       justifyContent: 'center',
       height: '100vh',
       backgroundColor: '#2ab985',
-      fontFamily: "sans-serif",
+      fontFamily: "'Segoe UI', Tahoma, Geneva, Verdana, sans-serif",
       padding: '20px',
     },
     form: {
@@ -86,13 +118,21 @@ export default function Login() {
 
   return (
     <div style={styles.container}>
-      <form style={styles.form} onSubmit={(e) => { e.preventDefault(); handleLogin(); }}>
-        <h1 style={styles.heading}>Please Login First</h1>
+      <form style={styles.form} onSubmit={(e) => { e.preventDefault(); handleSignup(); }}>
+        <h1 style={styles.heading}>Create an Account</h1>
+
+        <input
+          type="text"
+          placeholder="Full Name"
+          style={styles.input}
+          onChange={e => setFullName(e.target.value)}
+          required
+        />
         <input
           type="email"
           placeholder="Email"
           style={styles.input}
-          onChange={(e) => setEmail(e.target.value)}
+          onChange={e => setEmail(e.target.value)}
           required
           autoComplete="email"
           onFocus={(e) => (e.currentTarget.style.borderColor = styles.inputFocus.borderColor)}
@@ -102,9 +142,9 @@ export default function Login() {
           type="password"
           placeholder="Password"
           style={styles.input}
-          onChange={(e) => setPassword(e.target.value)}
+          onChange={e => setPassword(e.target.value)}
           required
-          autoComplete="current-password"
+          autoComplete="new-password"
           onFocus={(e) => (e.currentTarget.style.borderColor = styles.inputFocus.borderColor)}
           onBlur={(e) => (e.currentTarget.style.borderColor = styles.input.border)}
         />
@@ -114,12 +154,10 @@ export default function Login() {
           onMouseEnter={() => setHover(true)}
           onMouseLeave={() => setHover(false)}
         >
-          Log In
+          Sign Up
         </button>
         {errorMsg && <p style={styles.error}>{errorMsg}</p>}
-        <Link href="/signup" style={styles.link}>
-          Don’t have an account? Sign up here
-        </Link>
+        <Link href="/login" style={styles.link}>Already have an account? Log in</Link>
       </form>
     </div>
   );
