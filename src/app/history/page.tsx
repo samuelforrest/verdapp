@@ -51,8 +51,7 @@ export default function LeaderboardPage() {
 
       if (error) throw error;
       setEntries(data || []);
-    } catch (err) {
-
+    } catch {
       setError('Leaderboard didnt load');
     }
      finally {
@@ -88,7 +87,7 @@ export default function LeaderboardPage() {
           <button
             onClick={() => setSortBy('lowest')}
             className={`px-4 py-2 rounded font-medium transition-colors ${
-              sortBy === 'lowest' // Sets it to sort from lowest-->highest
+              sortBy === 'lowest' /* Sets it to sort from lowest-->highest */
                 ? 'bg-green-700 text-white'
                 : 'bg-gray-200 text-gray-700 hover:bg-green-100'
             }`}
@@ -98,9 +97,9 @@ export default function LeaderboardPage() {
           <button
             onClick={() => setSortBy('highest')}
             className={`px-4 py-2 rounded font-medium transition-colors ${
-              sortBy === 'highest' // Sets it to sort from hightest --> lowest
+              sortBy === 'highest' /* Sets it to sort from hightest --> lowest */
                 ? 'bg-red-700 text-white'
-                : 'bg-gray-200 text-gray-700 hover:bg-red-100' // Make it display as red as bad
+                : 'bg-gray-200 text-gray-700 hover:bg-red-100' /* Make it display as red as bad */
             }`}
           >
             Highest First
@@ -113,7 +112,8 @@ export default function LeaderboardPage() {
 
         {error && (
           <div>
-            {error} //print error event
+            {/* print error event */}
+            {error}
           </div>
         )}
 
@@ -121,22 +121,23 @@ export default function LeaderboardPage() {
 
           <div className="space-y-4">
 
-            {entries.map((entry, index) => ( //get index for each entry 
-
+            {entries.map((entry, index) => (
+              /* get index for each entry */
               <div
                 key={entry.id}
                 className="border border-gray-200 rounded-lg p-4 flex flex-col gap-2 bg-gray-50"
               >
 
-                <div className="flex items-center justify-between"> {/*center o center*/}
-                  <div className="flex items-center gap-3"> {/*center o center */}
-                    
-                    <span className="text-lg font-bold text-green-700">{getRankSuffix(index + 1)}</span> {/*add one to index*/}
-                    <span className="font-semibold text-gray-800">{entry.unique_name}</span> {/* show user selected unique id next to rank no.*/}
-                  
+                <div className="flex items-center justify-between">
+                  {/* center o center */}
+                  <div className="flex items-center gap-3">
+                    {/* center o center */}
+                    <span className="text-lg font-bold text-green-700">{getRankSuffix(index + 1)}</span>
+                    {/* add one to index */}
+                    <span className="font-semibold text-gray-800">{entry.unique_name}</span>
+                    {/* show user selected unique id next to rank no. */}
                   </div>
-                  
-                    <span className="text-xs text-gray-400">{formatDate(entry.created_at)}</span>
+                  <span className="text-xs text-gray-400">{formatDate(entry.created_at)}</span>
                 </div>
                 
                 <div className="flex flex-wrap gap-4 mt-2">

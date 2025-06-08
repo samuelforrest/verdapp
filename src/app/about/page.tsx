@@ -20,7 +20,7 @@ const AboutPage = () => {
               descisions. Our motto is{" "}
               <span className="font-semibold">Track More, Waste Less.</span> We
               have 2 platforms on one; our Trash Sorter and the CO2 Calculator,
-              which link together with our backend 'history' database for users
+              which link together with our backend &#39;history&#39; database for users
               with an account.
             </p>
           </section>
