@@ -1,10 +1,5 @@
-// next.config.js
-const { withNetlify } = require('@netlify/next');
+const netlifyPlugin = require('@netlify/next');
 
-const nextConfig = {
+module.exports = {
   reactStrictMode: true,
-  swcMinify: true,
-  // add any other config here
 };
-
-module.exports = withNetlify(nextConfig);
