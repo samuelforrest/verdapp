@@ -2,6 +2,7 @@ import type { Metadata } from "next";
 import { Montserrat, Lora } from "next/font/google";
 import "./globals.css";
 import NavigationBar from "@/components/NavigationBar";
+import Head from "next/head";
 
 // Initialize Montserrat font with specified subsets, display strategy, and CSS variable.
 const montserrat = Montserrat({
@@ -37,17 +38,24 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html
-      lang="en"
-      // Applies the CSS variables for Montserrat and Lora fonts to the html element,
-      // making them available globally.
-      className={`${montserrat.variable} ${lora.variable}`}
-    >
-      {/* Body element intentionally has no Tailwind classes to allow globals.css to control the background. */}
-      <body className="">
-        <NavigationBar />
-        {children} {/* Page content is rendered here */}
-      </body>
-    </html>
+    <>
+      <Head>
+        <title>Verda</title>
+        <meta name="description" content="An app allowing users to sort waste properly and calculate their carbon footprints" />
+        <link rel="icon" href="/verda-logo.png" />
+      </Head>
+      <html
+        lang="en"
+        // Applies the CSS variables for Montserrat and Lora fonts to the html element,
+        // making them available globally.
+        className={`${montserrat.variable} ${lora.variable}`}
+      >
+        {/* Body element intentionally has no Tailwind classes to allow globals.css to control the background. */}
+        <body className="">
+          <NavigationBar />
+          {children} {/* Page content is rendered here */}
+        </body>
+      </html>
+    </>
   );
 }
